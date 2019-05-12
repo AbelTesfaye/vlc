@@ -54,3 +54,20 @@ build*
 contrib-*
 install-*
 
+#custom
+contrib/
+vlc_gitlab.creator.user
+.qmake.stash
+vlc_gitlab.cflags
+vlc_gitlab.config
+vlc_gitlab.creator
+vlc_gitlab.cxxflags
+vlc_gitlab.files
+vlc_gitlab.includes
+modules/vlc-qt-check
+modules/codec/webvtt/CSSLexer.c
+modules/codec/webvtt/CSSGrammar.c
+modules/codec/webvtt/CSSGrammar.h
+modules/stream_out/chromecast/cast_channel.pb.h
+modules/stream_out/chromecast/cast_channel.pb.cc
+.vscode/
