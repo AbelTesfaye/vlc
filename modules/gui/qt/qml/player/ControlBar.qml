@@ -1,3 +1,4 @@
+
 /*****************************************************************************
  * Copyright (C) 2019 VLC authors and VideoLAN
  *
@@ -25,12 +26,11 @@ import "qrc:///style/"
 import "qrc:///utils/" as Utils
 import "qrc:///menus/" as Menus
 
-
 Utils.NavigableFocusScope {
     id: root
 
-    signal showTrackBar()
-    signal showPlaylist()
+    signal showTrackBar
+    signal showPlaylist
 
     property bool noAutoHide: mainMenu.opened
     property bool showPlaylistButton: false
@@ -48,9 +48,9 @@ Utils.NavigableFocusScope {
             id: trackPositionSlider
             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
             Layout.fillWidth: true
-            enabled: player.playingState == PlayerController.PLAYING_STATE_PLAYING || player.playingState == PlayerController.PLAYING_STATE_PAUSED
+            enabled: player.playingState == PlayerController.PLAYING_STATE_PLAYING
+                     || player.playingState == PlayerController.PLAYING_STATE_PAUSED
             Keys.onDownPressed: buttons.focus = true
-
         }
 
         Utils.NavigableFocusScope {
@@ -96,7 +96,7 @@ Utils.NavigableFocusScope {
                 }
 
                 Component.onCompleted: {
-                    playBtn.focus= true
+                    playBtn.focus = true
                 }
 
                 RowLayout {
@@ -123,9 +123,7 @@ Utils.NavigableFocusScope {
                         id: playBtn
                         size: VLCStyle.icon_large
                         text: (player.playingState !== PlayerController.PLAYING_STATE_PAUSED
-                               && player.playingState !== PlayerController.PLAYING_STATE_STOPPED)
-                                     ? VLCIcons.pause
-                                     : VLCIcons.play
+                               && player.playingState !== PlayerController.PLAYING_STATE_STOPPED) ? VLCIcons.pause : VLCIcons.play
                         onClicked: mainPlaylistController.togglePlayPause()
                         focus: true
                         KeyNavigation.right: nextBtn
@@ -142,10 +140,10 @@ Utils.NavigableFocusScope {
                     Utils.IconToolButton {
                         id: repeatBtn
                         size: VLCStyle.icon_large
-                        checked: mainPlaylistController.repeatMode !== PlaylistControllerModel.PLAYBACK_REPEAT_NONE
-                        text: (mainPlaylistController.repeatMode == PlaylistControllerModel.PLAYBACK_REPEAT_CURRENT)
-                                     ? VLCIcons.repeat_one
-                                     : VLCIcons.repeat_all
+                        checked: mainPlaylistController.repeatMode
+                                 !== PlaylistControllerModel.PLAYBACK_REPEAT_NONE
+                        text: (mainPlaylistController.repeatMode
+                               == PlaylistControllerModel.PLAYBACK_REPEAT_CURRENT) ? VLCIcons.repeat_one : VLCIcons.repeat_all
                         onClicked: mainPlaylistController.toggleRepeatMode()
                         KeyNavigation.right: langBtn
                     }
@@ -162,7 +160,7 @@ Utils.NavigableFocusScope {
                     color: "transparent"
                 }
                 Component.onCompleted: {
-                    rightButtons.contentItem.focus= true
+                    rightButtons.contentItem.focus = true
                 }
 
                 RowLayout {
@@ -199,7 +197,6 @@ Utils.NavigableFocusScope {
                             }
                         }
                     }
-
                 }
             }
         }
