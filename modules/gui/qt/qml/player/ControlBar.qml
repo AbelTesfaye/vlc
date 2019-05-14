@@ -145,7 +145,7 @@ Utils.NavigableFocusScope {
                         text: (mainPlaylistController.repeatMode
                                == PlaylistControllerModel.PLAYBACK_REPEAT_CURRENT) ? VLCIcons.repeat_one : VLCIcons.repeat_all
                         onClicked: mainPlaylistController.toggleRepeatMode()
-                        KeyNavigation.right: langBtn
+                        KeyNavigation.right: rateBtn
                     }
                 }
             }
@@ -166,6 +166,20 @@ Utils.NavigableFocusScope {
                 RowLayout {
                     anchors.fill: parent
 
+                    Utils.IconToolButton {
+                        id: rateBtn
+                        height: VLCStyle.icon_large
+                        text: (player.rate).toFixed(2) + "x"
+                        onClicked: ratePopup.open()
+                        
+                        KeyNavigation.right: langBtn
+
+                        Menus.RateChangePopupMenu{
+                            id:ratePopup
+                        }
+
+
+                   }
 
                     Utils.IconToolButton {
                         id: langBtn

@@ -557,6 +557,7 @@ libqt_plugin_la_QML = \
 	gui/qt/qml/menus/PlaybackMenu.qml \
 	gui/qt/qml/menus/PopupMenu.qml \
 	gui/qt/qml/menus/SubtitleMenu.qml \
+        gui/qt/qml/menus/RateChangePopupMenu.qml \
 	gui/qt/qml/menus/ToolsMenu.qml \
 	gui/qt/qml/menus/ViewMenu.qml \
 	gui/qt/qml/menus/VideoMenu.qml \

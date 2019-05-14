@@ -228,6 +228,7 @@
         <file alias="CheckableModelSubMenu.qml">qml/menus/CheckableModelSubMenu.qml</file>
         <file alias="ViewMenu.qml">qml/menus/ViewMenu.qml</file>
         <file alias="PopupMenu.qml">qml/menus/PopupMenu.qml</file>
+        <file alias="RateChangePopupMenu.qml">qml/menus/RateChangePopupMenu.qml</file>
     </qresource>
     <qresource prefix="/player">
         <file alias="Player.qml">qml/player/Player.qml</file>
