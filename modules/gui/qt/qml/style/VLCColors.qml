@@ -75,6 +75,8 @@ Item {
 
     property color alert: "red";
 
+    property color buffer: "#696969";
+
     property var colorSchemes: ["system", "day", "night"]
 
     state: "system"
