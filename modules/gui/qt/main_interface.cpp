@@ -58,6 +58,7 @@
 #include "components/dialogmodel.hpp"
 
 #include "components/voutwindow/qvoutwindowdummy.hpp"
+#include "components/voutwindow/qvoutwindowgl.hpp"
 
 #include "components/qml_main_context.hpp"
 
@@ -174,8 +175,26 @@ MainInterface::MainInterface( intf_thread_t *_p_intf ) : QVLCMW( _p_intf ),
     b_hasWayland = platformName.startsWith(QLatin1String("wayland"), Qt::CaseInsensitive);
 #endif
 
-    // TODO: handle Wayland/X11/Win32 windows
-    m_videoRenderer.reset(new QVoutWindowDummy(this));
+    //fixme use a factory
+#ifdef QT5_HAS_WAYLAND
+    if( b_hasWayland )
+    {
+        //set an initial reference to the Egl intitialisation ref counting, this will avoid
+        //to destroy the display when the Vout is closed.
+        m_videoRenderer.reset(new QVoutWindowWayland(this, this));
+        setAttribute(Qt::WA_TranslucentBackground);
+    }
+    else
+#endif
+    if (platformName.startsWith(QLatin1String("eglfs"), Qt::CaseInsensitive)
+            || platformName.startsWith(QLatin1String("xcb"), Qt::CaseInsensitive))
+    {
+        m_videoRenderer.reset(new QVoutWindowGL(this, this));
+    }
+    else
+    {
+        m_videoRenderer.reset(new QVoutWindowDummy(this));
+    }
 
     /**************************
      *  UI and Widgets design
