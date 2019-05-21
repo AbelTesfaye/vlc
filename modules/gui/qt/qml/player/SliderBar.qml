@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  * Copyright (C) 2019 VLC authors and VideoLAN
  *
@@ -24,9 +23,21 @@ import "qrc:///style/"
 Slider {
     id: control
     anchors.margins: VLCStyle.margin_xxsmall
+    property bool _isHold: false
 
-    value: player.position
-    onMoved: player.position = control.position
+    Keys.onRightPressed: player.jumpFwd()
+    Keys.onLeftPressed: player.jumpBwd()
+
+
+    Connections {
+
+        /* only update the control position when the player position actually change, this avoid the slider
+         * to jump around when clicking
+         */
+        target: player
+        enabled: !_isHold
+        onPositionChanged: control.value = player.position
+    }
 
     height: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
     implicitHeight: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
@@ -47,7 +58,29 @@ Slider {
         height: implicitHeight
         color: "transparent"
 
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onPressed: function (event) {
+                control.focus = true
+                control._isHold = true
+                control.value = event.x / control.width
+                player.position = control.value
+            }
+
+            onReleased: control._isHold = false
+
+            onPositionChanged: function (event) {
+                if (pressed && (event.x <= control.width)) {
+                    control.value = event.x / control.width
+                    player.position = control.value
+                }
+            }
+        }
+
         Rectangle {
+            id: progressRect
             width: control.visualPosition * parent.width
             height: control.barHeight
             color: control.activeFocus ? VLCStyle.colors.accent : VLCStyle.colors.bgHover
@@ -59,7 +92,7 @@ Slider {
             property int bufferAnimWidth: 100 * VLCStyle.scale
             property int bufferAnimPosition: 0
             property int bufferFrames: 1000
-            property bool animateLoading: false
+            property alias animateLoading: loadingAnim.running
 
             height: control.barHeight
             opacity: 0.4
@@ -74,8 +107,8 @@ Slider {
                         target: bufferRect
                         width: bufferAnimWidth
                         visible: true
-                        x:(bufferAnimPosition / bufferFrames)* (parent.width - bufferAnimWidth)
-                        animateLoading:true
+                        x: (bufferAnimPosition / bufferFrames) * (parent.width - bufferAnimWidth)
+                        animateLoading: true
                     }
                 },
                 State {
@@ -85,8 +118,8 @@ Slider {
                         target: bufferRect
                         width: player.buffering * parent.width
                         visible: true
-                        x:0
-                        animateLoading:false
+                        x: 0
+                        animateLoading: false
                     }
                 },
                 State {
@@ -96,7 +129,7 @@ Slider {
                         target: bufferRect
                         width: player.buffering * parent.width
                         visible: false
-                        x:0
+                        x: 0
                         animateLoading: false
                     }
                 }
@@ -104,7 +137,6 @@ Slider {
 
             SequentialAnimation on bufferAnimPosition {
                 id: loadingAnim
-                running: bufferRect.animateLoading
                 loops: Animation.Infinite
                 PropertyAnimation {
                     from: 0.0
