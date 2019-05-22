@@ -28,6 +28,39 @@ Slider {
     Keys.onRightPressed: player.jumpFwd()
     Keys.onLeftPressed: player.jumpBwd()
 
+    Item {
+        y: -35 * VLCStyle.scale
+        id: timeTooltip
+        x: location - (timeIndicatorRect.width / 2)
+        visible: control.hovered
+
+        property real location: 0
+        property real position: location/control.width
+
+        Rectangle {
+            width: 10 * VLCStyle.scale
+            height: 10 * VLCStyle.scale
+
+            anchors.horizontalCenter: timeIndicatorRect.horizontalCenter
+            anchors.verticalCenter: timeIndicatorRect.bottom
+
+            rotation: 45
+            color: VLCStyle.colors.bgAlt
+        }
+
+        Rectangle {
+            id: timeIndicatorRect
+            width: 50 * VLCStyle.scale
+            height: 20 * VLCStyle.scale
+            color: VLCStyle.colors.bgAlt
+
+            Text {
+                anchors.centerIn: parent
+                text: (player.length.scale(timeTooltip.position).toString())
+                color: VLCStyle.colors.text
+            }
+        }
+    }
 
     Connections {
 
@@ -76,6 +109,7 @@ Slider {
                     control.value = event.x / control.width
                     player.position = control.value
                 }
+                timeTooltip.location = event.x
             }
         }
 
