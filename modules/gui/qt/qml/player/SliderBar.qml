@@ -17,6 +17,7 @@
  *****************************************************************************/
 import QtQuick 2.11
 import QtQuick.Controls 2.4
+import QtQuick.Layouts 1.3
 
 import "qrc:///style/"
 
@@ -24,9 +25,17 @@ Slider {
     id: control
     anchors.margins: VLCStyle.margin_xxsmall
     property bool _isHold: false
+    property bool _isSeekPointsShown: true
 
     Keys.onRightPressed: player.jumpFwd()
     Keys.onLeftPressed: player.jumpBwd()
+
+    Timer {
+        id: seekpointTimer
+        running: player.hasChapters && !control.hovered && _isSeekPointsShown
+        interval: 3000
+        onTriggered: control._isSeekPointsShown = false
+    }
 
     Item {
         y: -35 * VLCStyle.scale
@@ -50,13 +59,14 @@ Slider {
 
         Rectangle {
             id: timeIndicatorRect
-            width: 50 * VLCStyle.scale
+            width: childrenRect.width
             height: 20 * VLCStyle.scale
             color: VLCStyle.colors.bgAlt
 
             Text {
-                anchors.centerIn: parent
-                text: (player.length.scale(timeTooltip.position).toString())
+                text: player.length.scale(timeTooltip.position).toString() +
+                      (player.hasChapters ?
+                           " - " + player.chapters.getNameAtPosition(timeTooltip.position) : "")
                 color: VLCStyle.colors.text
             }
         }
@@ -92,8 +102,10 @@ Slider {
         color: "transparent"
 
         MouseArea {
+            id:sliderRectMouseArea
             anchors.fill: parent
             hoverEnabled: true
+            property bool isEntered: false
 
             onPressed: function (event) {
                 control.focus = true
@@ -110,6 +122,16 @@ Slider {
                     player.position = control.value
                 }
                 timeTooltip.location = event.x
+            }
+
+            onEntered: {
+                if(player.hasChapters)
+                    control._isSeekPointsShown = true
+            }
+
+            onExited: {
+                if(player.hasChapters)
+                    seekpointTimer.restart()
             }
         }
 
@@ -214,6 +236,38 @@ Slider {
                 bottomMargin: VLCStyle.margin_xxsmall
                 right: parent.right
                 rightMargin: VLCStyle.margin_xxsmall
+            }
+        }
+
+        RowLayout {
+            id: seekpointsRow
+            spacing: 0
+            visible: player.hasChapters
+            Repeater {
+                id: seekpointsRptr
+                model: player.chapters
+                Rectangle {
+                    id: seekpointsRect
+
+                    property real position: model.position
+
+                    color: VLCStyle.colors.seekpoint
+                    width: 1 * VLCStyle.scale
+                    height: control.barHeight
+                    x: sliderRect.width * seekpointsRect.position
+                }
+            }
+
+
+            OpacityAnimator on opacity {
+                from: 1
+                to: 0
+                running: !control._isSeekPointsShown
+            }
+            OpacityAnimator on opacity{
+                from: 0
+                to: 1
+                running: control._isSeekPointsShown
             }
         }
     }

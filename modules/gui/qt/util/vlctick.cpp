@@ -55,3 +55,8 @@ VLCTick VLCTick::scale(float scalar) const
     return VLCTick(m_ticks*scalar);
 }
 
+int VLCTick::toMilliseconds() const
+{
+    return MS_FROM_VLC_TICK(m_ticks);
+}
+

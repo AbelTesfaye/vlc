@@ -40,6 +40,7 @@ public:
      */
     Q_INVOKABLE QString toString() const;
     Q_INVOKABLE VLCTick scale(float) const;
+    Q_INVOKABLE int toMilliseconds() const;
 
 private:
     vlc_tick_t m_ticks;
