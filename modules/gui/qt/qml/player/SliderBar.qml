@@ -24,8 +24,52 @@ Slider {
     id: control
     anchors.margins: VLCStyle.margin_xxsmall
 
-    value: player.position
-    onMoved: player.position = control.position
+    Keys.onRightPressed: player.jumpFwd()
+    Keys.onLeftPressed: player.jumpBwd()
+
+    Item {
+        id: timeTooltip
+        property real location: 0
+        property real position: location/control.width
+
+        y: -35 * VLCStyle.scale
+        x: location - (timeIndicatorRect.width / 2)
+        visible: control.hovered
+
+        Rectangle {
+            width: 10 * VLCStyle.scale
+            height: 10 * VLCStyle.scale
+
+            anchors.horizontalCenter: timeIndicatorRect.horizontalCenter
+            anchors.verticalCenter: timeIndicatorRect.bottom
+
+            rotation: 45
+            color: VLCStyle.colors.bgAlt
+        }
+
+        Rectangle {
+            id: timeIndicatorRect
+            width: 50 * VLCStyle.scale
+            height: 20 * VLCStyle.scale
+            color: VLCStyle.colors.bgAlt
+
+            Text {
+                anchors.centerIn: parent
+                text: (player.length.scale(timeTooltip.position).toString())
+                color: VLCStyle.colors.text
+            }
+        }
+    }
+
+    Connections {
+        
+        /* only update the control position when the player position actually change, this avoid the slider
+         * to jump around when clicking
+         */
+        target: player
+        enabled: !_isHold
+        onPositionChanged: control.value = player.position
+    }
 
     height: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
     implicitHeight: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
@@ -44,6 +88,26 @@ Slider {
         implicitHeight: control.implicitHeight
         height: implicitHeight
         color: "transparent"
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onPressed: function (event) {
+                control.focus = true
+                control._isHold = true
+                control.value = event.x / control.width
+                player.position = control.value
+            }
+            onReleased: control._isHold = false
+            onPositionChanged: function (event) {
+                if (pressed && (event.x <= control.width)) {
+                    control.value = event.x / control.width
+                    player.position = control.value
+                }
+                timeTooltip.location = event.x
+            }
+        }
 
         Rectangle {
             width: control.visualPosition * parent.width
