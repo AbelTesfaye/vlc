@@ -39,6 +39,7 @@ public:
      * @return time as HH:MM:SS
      */
     Q_INVOKABLE QString toString() const;
+    Q_INVOKABLE int64_t toMilliseconds() const;
 
 private:
     vlc_tick_t m_ticks;

@@ -49,3 +49,8 @@ QString VLCTick::toString() const
                 .arg(min, 2, 10, QChar('0'))
                 .arg(sec, 2, 10, QChar('0'));
 }
+
+int64_t VLCTick::toMilliseconds() const
+{
+    return MS_FROM_VLC_TICK(m_ticks);
+}
