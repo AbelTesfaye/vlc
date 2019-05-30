@@ -17,15 +17,71 @@
  *****************************************************************************/
 import QtQuick 2.11
 import QtQuick.Controls 2.4
+import QtQuick.Layouts 1.3
 
 import "qrc:///style/"
 
 Slider {
     id: control
+    property bool _isHold: false
+    property bool _isSeekPointsShown: true
+    
     anchors.margins: VLCStyle.margin_xxsmall
 
-    value: player.position
-    onMoved: player.position = control.position
+    Keys.onRightPressed: player.jumpFwd()
+    Keys.onLeftPressed: player.jumpBwd()
+
+    Timer {
+        id: seekpointTimer
+        running: player.hasChapters && !control.hovered && _isSeekPointsShown
+        interval: 3000
+        onTriggered: control._isSeekPointsShown = false
+    }
+
+    Item {
+        id: timeTooltip
+        property real location: 0
+        property real position: location/control.width
+
+        y: -35 * VLCStyle.scale
+        x: location - (timeIndicatorRect.width / 2)
+        visible: control.hovered
+
+        Rectangle {
+            width: 10 * VLCStyle.scale
+            height: 10 * VLCStyle.scale
+
+            anchors.horizontalCenter: timeIndicatorRect.horizontalCenter
+            anchors.verticalCenter: timeIndicatorRect.bottom
+
+            rotation: 45
+            color: VLCStyle.colors.bgAlt
+        }
+
+        Rectangle {
+            id: timeIndicatorRect
+            width: childrenRect.width
+            height: 20 * VLCStyle.scale
+            color: VLCStyle.colors.bgAlt
+
+            Text {
+                text: (player.length.toMilliseconds() * timeTooltip.position).toString() +
+                      (player.hasChapters ?
+                           " - " + player.chapters.getNameAtPosition(timeTooltip.position) : "")
+                color: VLCStyle.colors.text
+            }
+        }
+    }
+
+    Connections {
+
+        /* only update the control position when the player position actually change, this avoid the slider
+         * to jump around when clicking
+         */
+        target: player
+        enabled: !_isHold
+        onPositionChanged: control.value = player.position
+    }
 
     height: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
     implicitHeight: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
@@ -44,6 +100,37 @@ Slider {
         implicitHeight: control.implicitHeight
         height: implicitHeight
         color: "transparent"
+
+        MouseArea {
+            id: sliderRectMouseArea
+            property bool isEntered: false
+
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onPressed: function (event) {
+                control.focus = true
+                control._isHold = true
+                control.value = event.x / control.width
+                player.position = control.value
+            }
+            onReleased: control._isHold = false
+            onPositionChanged: function (event) {
+                if (pressed && (event.x <= control.width)) {
+                    control.value = event.x / control.width
+                    player.position = control.value
+                }
+                timeTooltip.location = event.x
+            }
+            onEntered: {
+                if(player.hasChapters)
+                    control._isSeekPointsShown = true
+            }
+            onExited: {
+                if(player.hasChapters)
+                    seekpointTimer.restart()
+            }
+        }
 
         Rectangle {
             width: control.visualPosition * parent.width
@@ -73,6 +160,36 @@ Slider {
                 bottomMargin: VLCStyle.margin_xxsmall
                 right: parent.right
                 rightMargin: VLCStyle.margin_xxsmall
+            }
+        }
+
+        RowLayout {
+            id: seekpointsRow
+            spacing: 0
+            visible: player.hasChapters
+            Repeater {
+                id: seekpointsRptr
+                model: player.chapters
+                Rectangle {
+                    id: seekpointsRect
+                    property real position: model.position
+
+                    color: VLCStyle.colors.seekpoint
+                    width: 1 * VLCStyle.scale
+                    height: control.barHeight
+                    x: sliderRect.width * seekpointsRect.position
+                }
+            }
+
+            OpacityAnimator on opacity {
+                from: 1
+                to: 0
+                running: !control._isSeekPointsShown
+            }
+            OpacityAnimator on opacity{
+                from: 0
+                to: 1
+                running: control._isSeekPointsShown
             }
         }
     }
