@@ -22,10 +22,23 @@ import "qrc:///style/"
 
 Slider {
     id: control
+    property int barHeight: 5
+    property bool _isHold: false
+
     anchors.margins: VLCStyle.margin_xxsmall
 
-    value: player.position
-    onMoved: player.position = control.position
+    Keys.onRightPressed: player.jumpFwd()
+    Keys.onLeftPressed: player.jumpBwd()
+
+    Connections {
+
+        /* only update the control position when the player position actually change, this avoid the slider
+         * to jump around when clicking
+         */
+        target: player
+        enabled: !_isHold
+        onPositionChanged: control.value = player.position
+    }
 
     height: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
     implicitHeight: control.barHeight + VLCStyle.fontHeight_normal + VLCStyle.margin_xxsmall * 2
@@ -37,19 +50,109 @@ Slider {
 
     stepSize: 0.01
 
-    property int barHeight: 5
-
     background: Rectangle {
         width: control.availableWidth
         implicitHeight: control.implicitHeight
         height: implicitHeight
         color: "transparent"
 
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onPressed: function (event) {
+                control.focus = true
+                control._isHold = true
+                control.value = event.x / control.width
+                player.position = control.value
+            }
+            onReleased: control._isHold = false
+            onPositionChanged: function (event) {
+                if (pressed && (event.x <= control.width)) {
+                    control.value = event.x / control.width
+                    player.position = control.value
+                }
+            }
+        }
+
         Rectangle {
+            id: progressRect
             width: control.visualPosition * parent.width
             height: control.barHeight
             color: control.activeFocus ? VLCStyle.colors.accent : VLCStyle.colors.bgHover
             radius: control.barHeight
+        }
+
+        Rectangle {
+            id: bufferRect
+            property int bufferAnimWidth: 100 * VLCStyle.scale
+            property int bufferAnimPosition: 0
+            property int bufferFrames: 1000
+            property alias animateLoading: loadingAnim.running
+
+            height: control.barHeight
+            opacity: 0.4
+            color: VLCStyle.colors.buffer
+            radius: control.barHeight
+
+            states: [
+                State {
+                    name: "buffering not started"
+                    when: player.buffering === 0
+                    PropertyChanges {
+                        target: bufferRect
+                        width: bufferAnimWidth
+                        visible: true
+                        x: (bufferAnimPosition / bufferFrames) * (parent.width - bufferAnimWidth)
+                        animateLoading: true
+                    }
+                },
+                State {
+                    name: "time to start playing known"
+                    when: player.buffering < 1
+                    PropertyChanges {
+                        target: bufferRect
+                        width: player.buffering * parent.width
+                        visible: true
+                        x: 0
+                        animateLoading: false
+                    }
+                },
+                State {
+                    name: "playing from buffer"
+                    when: player.buffering === 1
+                    PropertyChanges {
+                        target: bufferRect
+                        width: player.buffering * parent.width
+                        visible: false
+                        x: 0
+                        animateLoading: false
+                    }
+                }
+            ]
+
+            SequentialAnimation on bufferAnimPosition {
+                id: loadingAnim
+                loops: Animation.Infinite
+                PropertyAnimation {
+                    from: 0.0
+                    to: bufferRect.bufferFrames
+                    duration: 2000
+                    easing.type: "OutBounce"
+                }
+                PauseAnimation {
+                    duration: 500
+                }
+                PropertyAnimation {
+                    from: bufferRect.bufferFrames
+                    to: 0.0
+                    duration: 2000
+                    easing.type: "OutBounce"
+                }
+                PauseAnimation {
+                    duration: 500
+                }
+            }
         }
 
         Text {
