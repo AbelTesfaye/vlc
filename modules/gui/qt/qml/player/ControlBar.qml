@@ -25,12 +25,12 @@ import org.videolan.vlc 0.1
 import "qrc:///style/"
 import "qrc:///utils/" as Utils
 import "qrc:///menus/" as Menus
+import "qrc:///playlist/" as PL
 
 Utils.NavigableFocusScope {
     id: root
 
     signal showTrackBar
-    signal showPlaylist
 
     property bool noAutoHide: mainMenu.opened
     property bool showPlaylistButton: false
@@ -180,7 +180,7 @@ Utils.NavigableFocusScope {
                         visible: showPlaylistButton
                         size: VLCStyle.icon_large
                         text: VLCIcons.playlist
-                        onClicked: root.showPlaylist()
+                        onClicked: rootWindow.playlistVisible = !rootWindow.playlistVisible
                         KeyNavigation.right: menuBtn
                     }
 
@@ -189,11 +189,13 @@ Utils.NavigableFocusScope {
                         size: VLCStyle.icon_large
                         text: VLCIcons.menu
                         onClicked: mainMenu.openAbove(this)
+                        KeyNavigation.right: playlistpopup
 
                         Menus.MainDropdownMenu {
                             id: mainMenu
                             onClosed: {
-                                menuBtn.forceActiveFocus()
+                                if (mainMenu.activeFocus)
+                                    menuBtn.forceActiveFocus()
                             }
                         }
                     }

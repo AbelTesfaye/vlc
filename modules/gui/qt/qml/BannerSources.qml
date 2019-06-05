@@ -33,7 +33,6 @@ Utils.NavigableFocusScope {
 
     property int selectedIndex: 0
     property alias model: pLBannerSources.model
-    signal toogleMenu()
 
     // Triggered when the toogleView button is selected
     function toggleView () {
@@ -179,7 +178,7 @@ Utils.NavigableFocusScope {
 
                         KeyNavigation.left: buttonView
 
-                        onClicked: root.toogleMenu()
+                        onClicked: rootWindow.playlistVisible = !rootWindow.playlistVisible
                     }
 
                     Utils.IconToolButton {
@@ -189,12 +188,16 @@ Utils.NavigableFocusScope {
                         text: VLCIcons.menu
 
                         KeyNavigation.left: playlist_btn
+                        KeyNavigation.right: playlist
 
                         onClicked: mainMenu.openBelow(this)
 
                         Menus.MainDropdownMenu {
                             id: mainMenu
-                            onClosed: menu_selector.forceActiveFocus()
+                            onClosed: {
+                                if (mainMenu.activeFocus)
+                                    menu_selector.forceActiveFocus()
+                            }
                         }
                     }
                 }
