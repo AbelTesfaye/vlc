@@ -253,6 +253,26 @@ Item {
                     font.pixelSize: VLCStyle.fontSize_small
                     color: VLCStyle.colors.text
                 }
+                RowLayout {
+                    visible: isVideo
+                    anchors {
+                        bottom:parent.bottom
+                        left: parent.left
+                        right: parent.right
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignLeft
+                        font.pixelSize: VLCStyle.fontSize_small
+                        color: VLCStyle.colors.textInactive
+                        text: infoLeft
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignRight
+                        font.pixelSize: VLCStyle.fontSize_small
+                        color: VLCStyle.colors.textInactive
+                        text: infoRight
+                    }
+                }
             }
         }
     }
