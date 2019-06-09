@@ -41,6 +41,8 @@ Item {
     property bool selected: false
     property int shiftX: 0
     property bool noActionButtons: false
+    property string infoLeft: ""
+    property string infoRight: ""
     property bool isVideo: false
 
     signal playClicked
