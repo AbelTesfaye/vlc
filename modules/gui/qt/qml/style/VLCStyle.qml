@@ -94,7 +94,7 @@ Item {
     property int widthSearchInput: 200 * scale;
     property int widthSortBox: 150 * scale;
 
-    property int video_normal_width: cover_normal * (16/9);
+    property real video_normal_width: cover_normal * (16/9);
 
     //timings
     property int delayToolTipAppear: 500;
