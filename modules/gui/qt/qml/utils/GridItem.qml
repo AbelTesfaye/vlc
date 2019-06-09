@@ -44,6 +44,7 @@ Item {
     property string infoLeft: ""
     property string infoRight: ""
     property bool isVideo: false
+    property double progress: 0.5
 
     signal playClicked
     signal addToPlaylistClicked
