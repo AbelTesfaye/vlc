@@ -95,7 +95,7 @@ Item {
 
                     Image {
                         id: cover
-                        width: VLCStyle.cover_small
+                        width: isVideo? VLCStyle.video_normal_width : VLCStyle.cover_small
                         height: VLCStyle.cover_small
                         Behavior on width  { SmoothedAnimation { velocity: 100 } }
                         Behavior on height { SmoothedAnimation { velocity: 100 } }
@@ -204,7 +204,7 @@ Item {
                             when: picture.highlighted
                             PropertyChanges {
                                 target: cover
-                                width:  VLCStyle.cover_normal - 2 * VLCStyle.margin_xsmall
+                                width:  isVideo? (VLCStyle.video_normal_width - 2 * VLCStyle.margin_xsmall): VLCStyle.cover_normal - 2 * VLCStyle.margin_xsmall
                                 height: VLCStyle.cover_normal - 2 * VLCStyle.margin_xsmall
                             }
                         },
@@ -213,7 +213,7 @@ Item {
                             when: !picture.highlighted
                             PropertyChanges {
                                 target: cover
-                                width:  VLCStyle.cover_normal - 2 * VLCStyle.margin_small
+                                width:  isVideo? ( VLCStyle.video_normal_width - 2 * VLCStyle.margin_small) : ( VLCStyle.cover_normal - 2 * VLCStyle.margin_small)
                                 height: VLCStyle.cover_normal - 2 * VLCStyle.margin_small
                             }
                         }

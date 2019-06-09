@@ -44,6 +44,7 @@ Utils.NavigableFocusScope {
                 title: model.title || qsTr("Unknown title")
                 selected: element.DelegateModel.inSelected || view.currentItem.currentIndex === index
                 shiftX: view.currentItem.shiftX(model.index)
+                isVideo: true
 
                 onItemClicked : {
                     delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
