@@ -22,12 +22,22 @@ import QtQml.Models 2.2
 import org.videolan.medialib 0.1
 
 import "qrc:///utils/" as Utils
+import "qrc:///dialogs/" as DG
 import "qrc:///style/"
 
 Utils.NavigableFocusScope {
     id: root
 
     property alias model: delegateModel.model
+
+    DG.ModalDialog {
+        id: deleteDialog
+        title: qsTr("Are you sure you want to delete?")
+        standardButtons: Dialog.Yes | Dialog.No
+
+        onAccepted: console.log("Ok clicked")
+        onRejected: console.log("Cancel clicked")
+    }
 
     Utils.SelectableDelegateModel {
         id: delegateModel
@@ -50,12 +60,56 @@ Utils.NavigableFocusScope {
                 progress: model.position > 0 ? model.position : 0
 
                 onItemClicked : {
-                    delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
-                    view.currentItem.currentIndex = index
-                    view.currentItem.forceActiveFocus()
+                    if (key == Qt.RightButton){
+                        contextMenu.popup()
+                    }
+                    else {
+                        delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
+                        view.currentItem.currentIndex = index
+                        view.currentItem.forceActiveFocus()
+                    }
                 }
                 onPlayClicked: medialib.addAndPlay( model.id )
                 onAddToPlaylistClicked : medialib.addToPlaylist( model.id )
+
+                Utils.MenuExt {
+                       id: contextMenu
+                       closePolicy: Popup.CloseOnReleaseOutside | Popup.CloseOnEscape
+
+                       Utils.MenuItemExt {
+                           text: "Play from start"
+                           onTriggered: medialib.addAndPlay( model.id)
+                       }
+                       Utils.MenuItemExt {
+                           text: "Play all"
+                           onTriggered: console.log("not implemented")
+                       }
+                       Utils.MenuItemExt {
+                           text: "Play as audio"
+                           onTriggered: console.log("not implemented")
+                       }
+                       Utils.MenuItemExt {
+                           text: "Append"
+                           onTriggered: medialib.addToPlaylist(model.id )
+                       }
+                       Utils.MenuItemExt {
+                           text: "Information"
+                           onTriggered: console.log("not implemented")
+                       }
+                       Utils.MenuItemExt {
+                           text: "Download subtitles"
+                           onTriggered: console.log("not implemented")
+                       }
+                       Utils.MenuItemExt {
+                           text: "Add to playlist"
+                           onTriggered: console.log("not implemented")
+                       }
+                       Utils.MenuItemExt {
+                           text: "Delete"
+                           onTriggered: deleteDialog.open()
+                       }
+
+                   }
             }
 
             Utils.ListItem {
