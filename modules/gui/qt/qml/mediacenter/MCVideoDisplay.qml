@@ -18,10 +18,12 @@
 import QtQuick 2.11
 import QtQuick.Controls 2.4
 import QtQml.Models 2.2
+import QtQuick.Window 2.2
 
 import org.videolan.medialib 0.1
 
 import "qrc:///utils/" as Utils
+import "qrc:///dialogs/" as DG
 import "qrc:///style/"
 
 Utils.NavigableFocusScope {
@@ -29,6 +31,73 @@ Utils.NavigableFocusScope {
 
     property alias model: delegateModel.model
 
+    DG.ModalDialog {
+        id: deleteDialog
+        title: qsTr("Are you sure you want to delete?")
+        standardButtons: Dialog.Yes | Dialog.No
+
+        onAccepted: console.log("Ok clicked")
+        onRejected: console.log("Cancel clicked")
+    }
+
+    Utils.MenuExt {
+           id: contextMenu
+           property var model: ({})
+           closePolicy: Popup.CloseOnReleaseOutside | Popup.CloseOnEscape
+
+           Utils.MenuItemExt {
+               id: playMenuItem
+               text: "Play from start"
+               onTriggered: medialib.addAndPlay( contextMenu.model.id )
+           }
+           Utils.MenuItemExt {
+               text: "Play all"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Play as audio"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Enqueue"
+               onTriggered: medialib.addToPlaylist( contextMenu.model.id )
+           }
+           Utils.MenuItemExt {
+               text: "Information"
+               onTriggered: infoWin.show()
+               Window {
+                   id: infoWin
+                   color: VLCStyle.colors.bg
+
+                   Column {
+                       Image {source: contextMenu.model.thumbnail}
+                       Text {text:"File Name: " + contextMenu.model.title; color: VLCStyle.colors.text}
+                       Text {text:"Path: " + contextMenu.model.mrl; color: VLCStyle.colors.text}
+                       Text {text:"Length: " + contextMenu.model.duration; color: VLCStyle.colors.text}
+                       Text {text:"File size: "; color: VLCStyle.colors.text}
+                       Text {text:"Times played: " + contextMenu.model.playcount; color: VLCStyle.colors.text}
+                       Text {text:"Video track:" + contextMenu.model.videoDesc; color: VLCStyle.colors.textInactive}
+                       Text {text:"Audio track:" + contextMenu.model.audioDesc; color: VLCStyle.colors.textInactive}
+                   }
+
+               }
+           }
+           Utils.MenuItemExt {
+               text: "Download subtitles"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Add to playlist"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Delete"
+               onTriggered: deleteDialog.open()
+           }
+
+           onClosed: contextMenu.parent.forceActiveFocus()
+
+       }
     Utils.SelectableDelegateModel {
         id: delegateModel
         model: MLVideoModel {
@@ -50,14 +119,24 @@ Utils.NavigableFocusScope {
                 progress: model.position > 0 ? model.position : 0
 
                 onItemClicked : {
-                    delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
-                    view.currentItem.currentIndex = index
-                    view.currentItem.forceActiveFocus()
+                    if (key == Qt.RightButton){
+                        contextMenu.model = model
+                        contextMenu.popup()
+                    }
+                    else {
+                        delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
+                        view.currentItem.currentIndex = index
+                        view.currentItem.forceActiveFocus()
+                    }
                 }
                 onPlayClicked: medialib.addAndPlay( model.id )
                 onAddToPlaylistClicked : medialib.addToPlaylist( model.id )
-            }
+                onContextMenuButtonClicked:{
+                    contextMenu.model = model;
+                    contextMenu.popup(menuParent,contextMenu.width,0,playMenuItem)
+                }
 
+         }
             Utils.ListItem {
                 Package.name: "list"
                 width: root.width
@@ -107,7 +186,6 @@ Utils.NavigableFocusScope {
 
     Component {
         id: gridComponent
-
         Utils.KeyNavigableGridView {
             id: gridView_id
 
@@ -194,27 +272,24 @@ Utils.NavigableFocusScope {
         }
     }
 
-    Utils.StackViewExt {
-        id: view
+        Utils.StackViewExt {
+            id: view
 
-        anchors.fill: parent
-        anchors.margins: VLCStyle.margin_normal
+            anchors.fill: root
 
-        focus: true
-
-        initialItem: medialib.gridView ? gridComponent : listComponent
-
-        Connections {
-            target: medialib
-            onGridViewChanged: {
-                if (medialib.gridView)
-                    view.replace(gridComponent)
-                else
-                    view.replace(listComponent)
+            focus: true
+            initialItem: medialib.gridView ? gridComponent : listComponent
+            Connections {
+                target: medialib
+                onGridViewChanged: {
+                    if (medialib.gridView)
+                        view.replace(gridComponent)
+                    else
+                        view.replace(listComponent)
+                }
             }
-        }
-    }
 
+    }
     Label {
         anchors.centerIn: parent
         visible: delegateModel.items.count === 0
