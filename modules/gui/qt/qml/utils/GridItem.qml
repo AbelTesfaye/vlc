@@ -29,7 +29,7 @@ import "qrc:///style/"
 
 Item {
     id: root
-    width: VLCStyle.cover_normal
+    width: isVideo? VLCStyle.video_normal_width : VLCStyle.cover_small
     height: VLCStyle.cover_normal
             + VLCStyle.fontHeight_normal
             + VLCStyle.fontHeight_small
@@ -41,6 +41,7 @@ Item {
     property bool selected: false
     property int shiftX: 0
     property bool noActionButtons: false
+    property bool isVideo: false
 
     signal playClicked
     signal addToPlaylistClicked

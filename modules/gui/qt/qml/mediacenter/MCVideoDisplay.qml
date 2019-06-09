@@ -112,7 +112,7 @@ Utils.NavigableFocusScope {
 
             focus: true
 
-            cellWidth: VLCStyle.cover_normal + VLCStyle.margin_small
+            cellWidth: VLCStyle.video_normal_width + VLCStyle.margin_small
             cellHeight: VLCStyle.cover_normal + VLCStyle.fontHeight_normal + VLCStyle.margin_small
 
             onSelectAll: delegateModel.selectAll()
