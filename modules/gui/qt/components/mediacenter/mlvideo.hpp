@@ -41,6 +41,8 @@ class MLVideo : public QObject
     Q_PROPERTY(QString mrl READ getMRL CONSTANT);
     Q_PROPERTY(unsigned int progress READ getProgress CONSTANT);
     Q_PROPERTY(unsigned int playCount READ getPlayCount CONSTANT);
+    Q_PROPERTY(QString resolution READ getResolution CONSTANT);
+    Q_PROPERTY(float position READ getPosition CONSTANT);
 
 public:
     MLVideo(vlc_medialibrary_t *ml, const vlc_ml_media_t *data, QObject *parent = nullptr);
@@ -49,9 +51,11 @@ public:
     QString getTitle() const;
     QString getThumbnail();
     QString getDuration() const;
+    QString getResolution() const;
     QString getMRL() const;
     unsigned int getProgress() const;
     unsigned int getPlayCount() const;
+    float getPosition() const;
 
     MLVideo* clone(QObject* parent = nullptr) const;
 
@@ -71,8 +75,10 @@ private:
     QString m_thumbnail;
     QString m_duration;
     QString m_mrl;
+    QString m_resolution;
     unsigned int m_progress;
     unsigned int m_playCount;
+    float m_position;
     bool m_thumbnailGenerated;
 
     std::unique_ptr<vlc_ml_event_callback_t,

@@ -30,6 +30,7 @@ MLVideo::MLVideo(vlc_medialibrary_t* ml, const vlc_ml_media_t* data, QObject* pa
     , m_thumbnail( QString::fromUtf8( data->psz_artwork_mrl ) )
     , m_playCount( data->i_playcount )
     , m_thumbnailGenerated( data->b_artwork_generated )
+    , m_position( 0 )
     , m_ml_event_handle( nullptr, [this](vlc_ml_event_callback_t* cb ) {
         assert( m_ml != nullptr );
         vlc_ml_event_unregister_callback( m_ml, cb );
@@ -37,7 +38,7 @@ MLVideo::MLVideo(vlc_medialibrary_t* ml, const vlc_ml_media_t* data, QObject* pa
 {
     assert( data->i_type == VLC_ML_MEDIA_TYPE_VIDEO );
 
-    int t_sec = data->i_duration / 1000000;
+    int t_sec = data->i_duration / 1000;
     int sec = t_sec % 60;
     int min = (t_sec / 60) % 60;
     int hour = t_sec / 3600;
@@ -65,6 +66,11 @@ MLVideo::MLVideo(vlc_medialibrary_t* ml, const vlc_ml_media_t* data, QObject* pa
         m_progress = atoi( psz_progress );
         free( psz_progress );
     }
+
+    if(data->i_duration)
+        m_position = m_progress / data->i_duration;
+
+    m_resolution = QString::number(data->p_tracks->p_items[0].v.i_width) + " x " + QString::number(data->p_tracks->p_items[0].v.i_height);
 }
 
 MLVideo::MLVideo(const MLVideo& video, QObject* parent)
@@ -131,6 +137,10 @@ QString MLVideo::getMRL() const
 {
     return m_mrl;
 }
+QString MLVideo::getResolution() const
+{
+    return m_resolution;
+}
 
 unsigned int MLVideo::getProgress() const
 {
@@ -140,6 +150,10 @@ unsigned int MLVideo::getProgress() const
 unsigned int MLVideo::getPlayCount() const
 {
     return m_playCount;
+}
+float MLVideo::getPosition() const
+{
+    return m_position;
 }
 
 MLVideo*MLVideo::clone(QObject* parent) const
