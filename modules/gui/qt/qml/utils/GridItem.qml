@@ -177,6 +177,27 @@ Item {
                                 }
                             }
                         }
+                        ProgressBar {
+                            id: progressBar
+                            value: root.progress
+                            visible: isVideo
+                            anchors{
+                                bottom: parent.bottom
+                                left: parent.left
+                                right: parent.right
+                            }
+                            background: Rectangle {
+                                implicitHeight: 3 * VLCStyle.scale
+                                color: VLCStyle.colors.bg
+                            }
+                            contentItem: Item {
+                                Rectangle {
+                                    width: progressBar.visualPosition * parent.width
+                                    height: parent.height
+                                    color: VLCStyle.colors.accent
+                                }
+                            }
+                        }
                         states: [
                             State {
                                 name: "visible"
