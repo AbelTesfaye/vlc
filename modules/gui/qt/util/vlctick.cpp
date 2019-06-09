@@ -47,5 +47,10 @@ QString VLCTick::toString() const
        return QString("%1:%2:%3")
                 .arg(hour, 2, 10, QChar('0'))
                 .arg(min, 2, 10, QChar('0'))
-                .arg(sec, 2, 10, QChar('0'));
+               .arg(sec, 2, 10, QChar('0'));
+}
+
+unsigned int VLCTick::toMilliseconds() const
+{
+    return MS_FROM_VLC_TICK(m_ticks);
 }
