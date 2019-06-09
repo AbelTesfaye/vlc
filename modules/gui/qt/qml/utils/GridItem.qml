@@ -48,7 +48,7 @@ Item {
 
     signal playClicked
     signal addToPlaylistClicked
-    signal itemClicked(int keys, int modifier)
+    signal itemClicked(int key, int modifier)
     signal itemDoubleClicked(int keys, int modifier)
 
     Item {
@@ -61,8 +61,9 @@ Item {
             id: mouseArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked:  root.itemClicked(mouse.buttons, mouse.modifiers)
+            onClicked: root.itemClicked(mouse.button, mouse.modifiers)
             onDoubleClicked: root.itemDoubleClicked(mouse.buttons, mouse.modifiers);
+            acceptedButtons: Qt.RightButton | Qt.LeftButton
 
             Item {
                 anchors.fill: parent
