@@ -50,11 +50,14 @@ Item {
     signal addToPlaylistClicked
     signal itemClicked(int key, int modifier)
     signal itemDoubleClicked(int keys, int modifier)
+    signal contextMenuButtonClicked(Item menuParent)
 
+    onActiveFocusChanged: activeFocus && contextButton.forceActiveFocus()
     Item {
         x: shiftX
         width: parent.width
         height: parent.height
+        anchors.bottomMargin: VLCStyle.margin_large
 
         MouseArea {
 
@@ -106,7 +109,15 @@ Item {
                         anchors.centerIn: parent
                         source: image
                         fillMode: Image.PreserveAspectCrop
-
+                        layer.enabled: true
+                        layer.effect: OpacityMask{
+                            maskSource: Rectangle{
+                                radius: 4
+                                width: cover.width
+                                height: cover.height
+                                visible: false
+                            }
+                        }
                         Rectangle {
                             id: overlay
                             anchors.fill: parent
@@ -178,6 +189,49 @@ Item {
                                 }
                             }
                         }
+                        Button {
+                            id: contextButton
+                            anchors {
+                                top:cover.top
+                                right:cover.right
+                            }
+                            width: VLCStyle.icon_normal
+                            height: VLCStyle.icon_normal
+                            text: VLCIcons.ellipsis
+                            font.pointSize: 20
+
+                            hoverEnabled: true
+                            onClicked: root.contextMenuButtonClicked(contextButton)
+                            background: Rectangle {
+                                id: contextButtonRect
+                                anchors.fill: contextButton
+                                color: "transparent"
+                            }
+                            contentItem: Text {
+                                id: btnTxt
+                                text: contextButton.text
+                                font: contextButton.font
+                                opacity:  (mouseArea.containsMouse || contextButton.activeFocus) ? 1.0 : 0.8
+                                color: (mouseArea.containsMouse || contextButton.activeFocus) ? VLCStyle.colors.accent : VLCStyle.colors.bg
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+//                                layer.enabled: true
+//                                layer.effect: DropShadow {
+//                                    color: VLCStyle.colors.text
+//                                }
+
+                            }
+                            layer.enabled: true
+                            layer.effect: OpacityMask{
+                                id: opacityMask
+                                maskSource: Rectangle{
+                                    radius: 4
+                                    width: cover.width
+                                    height: cover.height
+                                    visible: false
+                                }
+                            }
+                        }
                         ProgressBar {
                             id: progressBar
                             value: root.progress
@@ -244,8 +298,8 @@ Item {
                         }
                     ]
                 }
-                Text {
-                    id: textTitle
+                Rectangle{
+                    id: textTitleRect
                     anchors {
                         left: parent.left
                         right: parent.right
@@ -253,25 +307,66 @@ Item {
                         rightMargin: VLCStyle.margin_small
                         leftMargin: VLCStyle.margin_small
                     }
+                    height: childrenRect.height
+                    color: "transparent"
+                    clip: true
 
-                    text: root.title
+                    Text{
+                        id:textTitle
+                        text:root.title
+                        color: VLCStyle.colors.text
+                        font.pixelSize: VLCStyle.fontSize_normal
+                        state: (mouseArea.containsMouse || contextButton.activeFocus) ? "HOVERED": "RELEASED"
 
-                    elide: Text.ElideRight
-                    font.pixelSize: VLCStyle.fontSize_normal
-                    font.bold: true
-                    color: VLCStyle.colors.text
+                        states: [
+                            State {
+                                name: "HOVERED"
+                                PropertyChanges {
+                                    target: textTitle
+                                    x: textTitleRect.width - textTitle.width - VLCStyle.margin_small
+                                }
+                            },
+                            State {
+                                name: "RELEASED"
+                                PropertyChanges {
+                                    target: textTitle
+                                    x: 0
+                                }
+
+                            }
+                        ]
+                        transitions: [
+                            Transition {
+                                from: "RELEASED"
+                                to: "HOVERED"
+
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 3000 }
+                                    SmoothedAnimation{
+                                        property: "x"
+                                        maximumEasingTime: 0
+                                        velocity: 25
+                                    }
+                                    PauseAnimation { duration: 3000 }
+                                    ScriptAction { script: textTitle.state = "RELEASED"; }
+                                }
+                            }
+                        ]
+
+                    }
                 }
                 Text {
+                    id: subtitleTxt
                     anchors {
                         left: parent.left
                         right: parent.right
-                        top: textTitle.bottom
+                        top: textTitleRect.bottom
                         rightMargin: VLCStyle.margin_small
                         leftMargin: VLCStyle.margin_small
                     }
 
-                    text : root.subtitle
-
+                    text: root.subtitle
+                    font.weight:Font.Light
                     elide: Text.ElideRight
                     font.pixelSize: VLCStyle.fontSize_small
                     color: VLCStyle.colors.text
@@ -279,9 +374,12 @@ Item {
                 RowLayout {
                     visible: isVideo
                     anchors {
-                        bottom:parent.bottom
+                        top:subtitleTxt.top
                         left: parent.left
                         right: parent.right
+                        rightMargin: VLCStyle.margin_small
+                        leftMargin: VLCStyle.margin_small
+                        topMargin: VLCStyle.margin_xxxsmall
                     }
                     Text {
                         Layout.alignment: Qt.AlignLeft

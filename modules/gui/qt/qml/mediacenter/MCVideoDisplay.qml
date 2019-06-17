@@ -39,6 +39,47 @@ Utils.NavigableFocusScope {
         onRejected: console.log("Cancel clicked")
     }
 
+    Utils.MenuExt {
+           id: contextMenu
+           closePolicy: Popup.CloseOnReleaseOutside | Popup.CloseOnEscape
+
+           Utils.MenuItemExt {
+               id: playMenuItem
+               text: "Play from start"
+               onTriggered: medialib.addAndPlay( model.id)
+           }
+           Utils.MenuItemExt {
+               text: "Play all"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Play as audio"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Append"
+               onTriggered: medialib.addToPlaylist(model.id )
+           }
+           Utils.MenuItemExt {
+               text: "Information"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Download subtitles"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Add to playlist"
+               onTriggered: console.log("not implemented")
+           }
+           Utils.MenuItemExt {
+               text: "Delete"
+               onTriggered: deleteDialog.open()
+           }
+
+           onClosed: contextMenu.parent.forceActiveFocus()
+
+       }
     Utils.SelectableDelegateModel {
         id: delegateModel
         model: MLVideoModel {
@@ -57,7 +98,7 @@ Utils.NavigableFocusScope {
                 infoLeft: model.duration
                 infoRight: model.resolution
                 isVideo: true
-                progress: model.position > 0 ? model.position : 0
+                //progress: model.position > 0 ? model.position : 0
 
                 onItemClicked : {
                     if (key == Qt.RightButton){
@@ -71,47 +112,9 @@ Utils.NavigableFocusScope {
                 }
                 onPlayClicked: medialib.addAndPlay( model.id )
                 onAddToPlaylistClicked : medialib.addToPlaylist( model.id )
+                onContextMenuButtonClicked: contextMenu.popup(menuParent,0,0,playMenuItem)
 
-                Utils.MenuExt {
-                       id: contextMenu
-                       closePolicy: Popup.CloseOnReleaseOutside | Popup.CloseOnEscape
-
-                       Utils.MenuItemExt {
-                           text: "Play from start"
-                           onTriggered: medialib.addAndPlay( model.id)
-                       }
-                       Utils.MenuItemExt {
-                           text: "Play all"
-                           onTriggered: console.log("not implemented")
-                       }
-                       Utils.MenuItemExt {
-                           text: "Play as audio"
-                           onTriggered: console.log("not implemented")
-                       }
-                       Utils.MenuItemExt {
-                           text: "Append"
-                           onTriggered: medialib.addToPlaylist(model.id )
-                       }
-                       Utils.MenuItemExt {
-                           text: "Information"
-                           onTriggered: console.log("not implemented")
-                       }
-                       Utils.MenuItemExt {
-                           text: "Download subtitles"
-                           onTriggered: console.log("not implemented")
-                       }
-                       Utils.MenuItemExt {
-                           text: "Add to playlist"
-                           onTriggered: console.log("not implemented")
-                       }
-                       Utils.MenuItemExt {
-                           text: "Delete"
-                           onTriggered: deleteDialog.open()
-                       }
-
-                   }
-            }
-
+         }
             Utils.ListItem {
                 Package.name: "list"
                 width: root.width
@@ -161,7 +164,6 @@ Utils.NavigableFocusScope {
 
     Component {
         id: gridComponent
-
         Utils.KeyNavigableGridView {
             id: gridView_id
 
@@ -171,7 +173,7 @@ Utils.NavigableFocusScope {
             focus: true
 
             cellWidth: VLCStyle.video_normal_width + VLCStyle.margin_small
-            cellHeight: VLCStyle.cover_normal + VLCStyle.fontHeight_normal + VLCStyle.margin_small
+            cellHeight: VLCStyle.cover_normal + VLCStyle.fontHeight_normal + VLCStyle.margin_large
 
             onSelectAll: delegateModel.selectAll()
             onSelectionUpdated: delegateModel.updateSelection( keyModifiers, oldIndex, newIndex )
@@ -209,25 +211,68 @@ Utils.NavigableFocusScope {
         }
     }
 
-    Utils.StackViewExt {
-        id: view
+    Item {
+        id:videosSection
+        anchors.fill: root
+        anchors.topMargin: VLCStyle.margin_large
 
-        anchors.fill: parent
-        focus: true
+        Item {
+            id: videosHeader
+            height: childrenRect.height
 
-        initialItem: medialib.gridView ? gridComponent : listComponent
+            anchors{
+                left: videosSection.left
+                right: videosSection.right
+                leftMargin: VLCStyle.margin_normal
+                rightMargin: VLCStyle.margin_normal
+            }
 
-        Connections {
-            target: medialib
-            onGridViewChanged: {
-                if (medialib.gridView)
-                    view.replace(gridComponent)
-                else
-                    view.replace(listComponent)
+            Label {
+                id: videosTxt
+                font.pixelSize: VLCStyle.fontHeight_xxlarge
+                color: VLCStyle.colors.text
+                text: qsTr("Videos")
+                font.weight: Font.Bold
+            }
+
+            Rectangle {
+                id: videosSeparator
+                height: VLCStyle.heightBar_xxxsmall
+                radius: 2
+
+                anchors{
+                    left: videosHeader.left
+                    right: videosHeader.right
+                    top: videosTxt.bottom
+                    topMargin: VLCStyle.margin_small
+                }
+                color: VLCStyle.colors.bgAlt
             }
         }
-    }
 
+        Utils.StackViewExt {
+            id: view
+
+            anchors{
+                top: videosHeader.bottom
+                right: videosSection.right
+                left: videosSection.left
+                bottom: videosSection.bottom
+            }
+            focus: true
+            initialItem: medialib.gridView ? gridComponent : listComponent
+            Connections {
+                target: medialib
+                onGridViewChanged: {
+                    if (medialib.gridView)
+                        view.replace(gridComponent)
+                    else
+                        view.replace(listComponent)
+                }
+            }
+        }
+
+    }
     Label {
         anchors.centerIn: parent
         visible: delegateModel.items.count === 0
