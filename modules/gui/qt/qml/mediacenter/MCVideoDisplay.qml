@@ -47,6 +47,7 @@ Utils.NavigableFocusScope {
                 infoLeft: model.duration
                 isVideo: true
                 isNew: model.playcount < 1
+                progress: model.position > 0 ? model.position : 0
 
                 onItemClicked : {
                     delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
