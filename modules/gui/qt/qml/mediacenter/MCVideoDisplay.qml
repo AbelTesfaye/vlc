@@ -114,6 +114,8 @@ Utils.NavigableFocusScope {
                 selected: element.DelegateModel.inSelected
                 shiftX: view.currentItem.shiftX(model.index)
                 infoLeft: model.duration
+                resolution: model.resolution
+                channel: model.channel
                 isVideo: true
                 isNew: model.playcount < 1
                 progress: model.position > 0 ? model.position : 0
