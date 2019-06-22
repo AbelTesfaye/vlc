@@ -99,6 +99,8 @@ Item {
     property int heightInput: 22 * scale;
 
     property int selectedBorder: 2
+    property real video_normal_height: 160 * scale;
+    property real video_normal_width: video_normal_height * (16/10);
 
     //timings
     property int delayToolTipAppear: 500;
