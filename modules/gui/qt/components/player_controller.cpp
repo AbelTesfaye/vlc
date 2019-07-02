@@ -252,6 +252,7 @@ static void on_player_state_changed(vlc_player_t *, enum vlc_player_state state,
         switch ( state ) {
         case VLC_PLAYER_STATE_STARTED:
             msg_Dbg( that->p_intf, "on_player_state_changed VLC_PLAYER_STATE_STARTED");
+            emit q->playerStarted( input_item_GetURI(that->q_func()->getInput()) );
             break;
         case VLC_PLAYER_STATE_PLAYING:
         {
@@ -274,6 +275,8 @@ static void on_player_state_changed(vlc_player_t *, enum vlc_player_state state,
             vlc_tick_t time = q->getTime();
             char * mrl = input_item_GetURI(q->getInput());
             RecentsMRL::getInstance( that->p_intf )->setTime( qfu( mrl ), time );
+
+            emit q->playerStopped( that->q_func()->getTime().toMilliseconds() , input_item_GetURI(that->q_func()->getInput()) );
 
             that->m_audioStereoMode.resetObject((audio_output_t*)nullptr);
             that->m_audioVisualization.resetObject((audio_output_t*)nullptr);
