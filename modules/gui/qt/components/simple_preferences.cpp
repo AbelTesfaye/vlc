@@ -726,6 +726,25 @@ SPrefsPanel::SPrefsPanel( intf_thread_t *_p_intf, QWidget *_parent,
                     + qtr( "VLC skins website" )+ QString( "</a>." ) );
             ui.skinsLabel->setFont( italicFont );
 
+            if (true) //TODO: build time detection if ml is available
+            {
+                mlModel = new MlFoldersModel( vlc_ml_instance_get( p_intf ), this );
+
+                mlTableView = ui.entryPointsTV;
+                mlTableView->setModel( mlModel );
+
+                connect( mlModel, &QAbstractItemModel::modelReset, this, &SPrefsPanel::drawControls );
+
+                BUTTONACT( ui.addButton, addNewEntryPoint() );
+
+                drawControls();
+
+
+
+            }else {
+                ui.mlGroupBox->hide();
+            }
+
 #ifdef _WIN32
             BUTTONACT( ui.assoButton, assoDialog() );
 #else
@@ -942,7 +961,6 @@ SPrefsPanel::SPrefsPanel( intf_thread_t *_p_intf, QWidget *_parent,
 #undef CONFIG_GENERIC
 #undef CONFIG_BOOL
 }
-
 
 void SPrefsPanel::updateAudioOptions( int number)
 {
@@ -1482,3 +1500,79 @@ void SPrefsPanel::saveAsso()
 
 #endif /* _WIN32 */
 
+void SPrefsPanel::addNewEntryPoint (){
+    QUrl newEntryPoints = QFileDialog::getExistingDirectoryUrl(this, qtr("Please choose an entry point folder"),
+                                             QUrl(QDir::homePath()));
+
+    if(!newEntryPoints.isEmpty())
+        mlModel->add(newEntryPoints);
+}
+
+
+
+
+#include <QSpinBox>
+#include <QCheckBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QGridLayout>
+#include <QWidget>
+#include <QHBoxLayout>
+#include <QDialog>
+#include <QBoxLayout>
+
+
+
+QWidget *SPrefsPanel::generateWidget(QModelIndex index,MlFoldersModel *mlf, QWidget *parent)
+{
+    if (index.column() == 0){
+
+        QWidget *wid = new QWidget(parent);
+
+        QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight, wid);
+
+        QCheckBox*cb = new QCheckBox(wid);
+        cb->setFixedSize(16,16);
+        cb->setChecked(mlf->data(index, MlFoldersModel::CustomCheckBoxRole).toBool());
+
+        layout->addWidget(cb, Qt::AlignCenter);
+        wid->setLayout(layout);
+
+        connect( cb,&QPushButton::clicked, [=]() {
+            mlf->setData(index, cb->isChecked() , MlFoldersModel::CustomCheckBoxRole);
+        } );
+        return wid;
+    }
+    else if (index.column() == 2){
+        QWidget *wid = new QWidget(parent);
+
+        QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight, wid);
+
+        QPushButton *pb = new QPushButton("-",wid);
+        pb->setFixedSize(16,16);
+
+        layout->addWidget(pb, Qt::AlignCenter);
+        wid->setLayout(layout);
+
+
+        connect( pb,&QPushButton::clicked, [=]() {
+             mlf->setData(index, {}, MlFoldersModel::CustomRemoveRole);
+        } );
+
+        return wid;
+    }
+
+    return nullptr;
+}
+
+void SPrefsPanel::drawControls()
+{
+    for (int col=0;col<mlModel->columnCount();col++)
+        for (int row=0;row<mlModel->rowCount();row++){
+           QModelIndex index = mlModel->index(row,col);
+            mlTableView->setIndexWidget(index, generateWidget(index,mlModel,mlTableView) );
+        }
+
+    mlTableView->resizeColumnsToContents();
+    mlTableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+}

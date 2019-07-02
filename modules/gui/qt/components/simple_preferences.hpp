@@ -36,6 +36,13 @@
 #include "ui/sprefs_subtitles.h"
 #include "ui/sprefs_interface.h"
 
+//TODO: build time detection if ml is available
+#include <vlc_media_library.h>
+#include <QDialogButtonBox>
+#include <QTableView>
+#include <QFileDialog>
+#include "components/ml_folders_model.hpp"
+
 #ifdef _WIN32
 # include "util/registry.hpp"
 #endif
@@ -107,6 +114,10 @@ private:
 
     char *lang;
 
+    //TODO: build time detection if ml is available
+       MlFoldersModel *mlModel;
+       QTableView * mlTableView;
+
 #ifdef _WIN32
     QList<QTreeWidgetItem *> listAsso;
     bool addType( const char * psz_ext, QTreeWidgetItem*, QTreeWidgetItem*, QVLCRegistry* );
@@ -124,8 +135,15 @@ private slots:
     void updateCheckBoxes( QTreeWidgetItem*, int );
     void saveAsso();
 #endif
+    //TODO: build time detection if ml is available
+        void addNewEntryPoint ();
+        QWidget *generateWidget(QModelIndex index,MlFoldersModel *mlf, QWidget *parent);
+        void drawControls();
+
+
     void configML();
     void changeStyle( QString );
 };
 
 #endif
+
