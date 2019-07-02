@@ -50,6 +50,11 @@ QString VLCTick::toString() const
                 .arg(sec, 2, 10, QChar('0'));
 }
 
+unsigned int VLCTick::toMilliseconds() const
+{
+    return MS_FROM_VLC_TICK(m_ticks);
+}
+
 VLCTick VLCTick::scale(float scalar) const
 {
     return VLCTick(m_ticks*scalar);
