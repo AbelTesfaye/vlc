@@ -271,6 +271,10 @@ static void on_player_state_changed(vlc_player_t *, enum vlc_player_state state,
         {
             msg_Dbg( that->p_intf, "on_player_state_changed VLC_PLAYER_STATE_STOPPED");
 
+            vlc_tick_t time = that->q_func()->getTime().toMilliseconds() * 1000;
+            char * mrl = input_item_GetURI(that->q_func()->getInput());
+            RecentsMRL::getInstance( that->p_intf )->setTime( qfu( mrl ), time );
+
             that->m_audioStereoMode.resetObject((audio_output_t*)nullptr);
             that->m_audioVisualization.resetObject((audio_output_t*)nullptr);
 
