@@ -404,6 +404,9 @@ signals:
     // Program Event changes
     void epgChanged();
 
+    void playerStopped( int timeInMS, QString mrl );
+    void playerStarted( QString mrl );
+
 private slots:
     void menusUpdateAudio( const QString& );
 

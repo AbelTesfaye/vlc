@@ -237,3 +237,13 @@ void MCMediaLib::onMediaLibraryEvent( void* data, const vlc_ml_event_t* event )
             break;
     }
 }
+void MCMediaLib::saveResumeTime( int timeInMS, QString mrl ){
+    int i_id = vlc_ml_get_media_by_mrl(  m_ml, qtu(mrl) )->i_id;
+    vlc_ml_media_set_playback_pref( m_ml, i_id, VLC_ML_PLAYBACK_PREF_PROGRESS,
+                                         std::to_string( timeInMS ).c_str() );
+}
+
+void MCMediaLib::incrementPlaycount( QString mrl ){
+    int i_id = vlc_ml_get_media_by_mrl(  m_ml, qtu(mrl) )->i_id;
+    vlc_ml_media_increase_playcount(m_ml,i_id);
+}

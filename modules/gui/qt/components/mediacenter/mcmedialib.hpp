@@ -79,4 +79,7 @@ private:
     vlc_medialibrary_t* m_ml;
     std::unique_ptr<vlc_ml_event_callback_t, std::function<void(vlc_ml_event_callback_t*)>> m_event_cb;
 
+public slots:
+    void saveResumeTime( int timeInMS, QString mrl );
+    void incrementPlaycount( QString mrl );
 };

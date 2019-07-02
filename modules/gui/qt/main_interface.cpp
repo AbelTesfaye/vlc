@@ -388,6 +388,10 @@ void MainInterface::createMainWidget( QSettings * )
     {
         MCMediaLib *medialib = new MCMediaLib(p_intf, mediacenterView);
         rootCtx->setContextProperty( "medialib", medialib );
+
+        connect(THEMIM,&PlayerController::playerStopped,medialib, &MCMediaLib::saveResumeTime );
+        connect(THEMIM,&PlayerController::playerStarted,medialib, &MCMediaLib::incrementPlaycount );
+
     }
     else
     {
@@ -1128,7 +1132,6 @@ VLCVarChoiceModel* MainInterface::getExtraInterfaces()
 {
     return m_extraInterfaces;
 }
-
 /*****************************************************************************
  * PopupMenuCB: callback triggered by the intf-popupmenu playlist variable.
  *  We don't show the menu directly here because we don't want the
