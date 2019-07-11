@@ -49,8 +49,8 @@ Rectangle {
     signal itemDoubleClicked(int keys, int modifier)
     signal contextMenuButtonClicked(Item menuParent)
 
-    onActiveFocusChanged: activeFocus && contextButton.forceActiveFocus()
-
+    onActiveFocusChanged: activeFocus && playIcon.forceActiveFocus()
+    
     Rectangle {
         id: gridItem
         x: shiftX
@@ -67,6 +67,7 @@ Rectangle {
             width: childrenRect.width
             height: childrenRect.height
             acceptedButtons: Qt.RightButton | Qt.LeftButton
+            Keys.onMenuPressed: root.contextMenuButtonClicked(cover_bg)
 
             Item {
                 id: picture
