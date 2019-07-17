@@ -52,24 +52,31 @@ NavigableFocusScope {
     property alias footerItem: view.footerItem
     property alias header: view.header
     property alias headerItem: view.headerItem
+    property alias flow: view.flow
+    property alias snapMode: view.snapMode
 
-    property alias currentIndex: view.currentIndex
+    property alias currentItem: view.currentItem
 
     GridView {
         id: view
 
         anchors.fill: parent
-
         clip: true
-        ScrollBar.vertical: ScrollBar { }
-
+        ScrollBar.horizontal: ScrollBar { }
+        flow: GridView.FlowLeftToRight
+        snapMode: GridView.NoSnap
         focus: true
 
         //key navigation is reimplemented for item selection
         keyNavigationEnabled: false
 
-        property int _colCount: Math.floor(width / cellWidth)
-
+        property int _colCount: {
+            if (contentWidth <= 0)
+                Math.floor(width / cellWidth)
+            else
+                Math.floor(contentWidth / cellWidth) + 1
+        }
+        
         Keys.onPressed: {
             var newIndex = -1
             if (event.key === Qt.Key_Right || event.matches(StandardKey.MoveToNextChar)) {

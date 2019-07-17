@@ -29,8 +29,11 @@ import "qrc:///style/"
 Utils.NavigableFocusScope {
     id: root
 
-    property alias model: delegateModel.model
-
+    property Item currentGridView: Item {}
+    property Item videosGridView: undefined
+    function shiftX(idx){
+        return videosGridView? videosGridView.shiftX(idx):0
+    }
     DG.ModalDialog {
         id: deleteDialog
         title: qsTr("Are you sure you want to delete?")
@@ -64,22 +67,8 @@ Utils.NavigableFocusScope {
            }
            Utils.MenuItemExt {
                text: "Information"
-               onTriggered: infoWin.show()
-               Window {
-                   id: infoWin
-                   color: VLCStyle.colors.bg
-
-                   Column {
-                       Image {source: contextMenu.model.thumbnail}
-                       Text {text:"File Name: " + contextMenu.model.title; color: VLCStyle.colors.text}
-                       Text {text:"Path: " + contextMenu.model.mrl; color: VLCStyle.colors.text}
-                       Text {text:"Length: " + contextMenu.model.duration; color: VLCStyle.colors.text}
-                       Text {text:"File size: "; color: VLCStyle.colors.text}
-                       Text {text:"Times played: " + contextMenu.model.playcount; color: VLCStyle.colors.text}
-                       Text {text:"Video track:" + contextMenu.model.videoDesc; color: VLCStyle.colors.textInactive}
-                       Text {text:"Audio track:" + contextMenu.model.audioDesc; color: VLCStyle.colors.textInactive}
-                   }
-
+               onTriggered: {
+                   root.currentGridView.switchExpandItem(contextMenu.model.index,root.currentGridView.currentItem)
                }
            }
            Utils.MenuItemExt {
@@ -99,7 +88,8 @@ Utils.NavigableFocusScope {
 
        }
     Utils.SelectableDelegateModel {
-        id: delegateModel
+        id: videosDelegate
+
         model: MLVideoModel {
             ml: medialib
         }
@@ -108,28 +98,26 @@ Utils.NavigableFocusScope {
             id: element
             Utils.GridItem {
                 Package.name: "grid"
-                focus: true
                 image: model.thumbnail || VLCStyle.noArtCover
                 title: model.title || qsTr("Unknown title")
-                selected: element.DelegateModel.inSelected
-                shiftX: view.currentItem.shiftX(model.index)
+                selected: videosGridView.activeFocus && element.DelegateModel.inSelected
                 infoLeft: model.duration
                 resolution: model.resolution
                 channel: model.channel
                 isVideo: true
                 isNew: model.playcount < 1
                 progress: model.position > 0 ? model.position : 0
+                shiftX: root.shiftX(model.index)
 
                 onItemClicked : {
                     if (key == Qt.RightButton){
                         contextMenu.model = model
                         contextMenu.popup()
                     }
-                    else {
-                        delegateModel.updateSelection( modifier , view.currentItem.currentIndex, index)
-                        view.currentItem.currentIndex = index
-                        view.currentItem.forceActiveFocus()
-                    }
+                    videosDelegate.updateSelection( modifier , view.currentItem.currentIndexVideos, index)
+                    view.currentItem.currentIndexVideos = index
+                    root.currentGridView = videosGV
+                    root.currentGridView.forceActiveFocus()
                 }
                 onPlayClicked: medialib.addAndPlay( model.id )
                 onAddToPlaylistClicked : medialib.addToPlaylist( model.id )
@@ -137,14 +125,16 @@ Utils.NavigableFocusScope {
                     contextMenu.model = model;
                     contextMenu.popup(menuParent,contextMenu.width,0,playMenuItem)
                 }
+                onSelectedChanged:{
+                    if(selected)
+                        root.currentGridView = videosGV
+                }
 
          }
             Utils.ListItem {
                 Package.name: "list"
                 width: root.width
                 height: VLCStyle.icon_normal
-                focus: true
-
                 color: VLCStyle.colors.getBgColor(element.DelegateModel.inSelected, this.hovered, this.activeFocus)
 
                 cover: Image {
@@ -155,8 +145,8 @@ Utils.NavigableFocusScope {
                 line1: (model.title || qsTr("Unknown title"))+" ["+model.duration+"]"
 
                 onItemClicked : {
-                    delegateModel.updateSelection( modifier, view.currentItem.currentIndex, index )
-                    view.currentItem.currentIndex = index
+                    videosDelegate.updateSelection( modifier, view.currentItem.currentIndexVideos, index )
+                    view.currentItem.currentIndexVideos = index
                     this.forceActiveFocus()
                 }
                 onPlayClicked: medialib.addAndPlay( model.id )
@@ -165,90 +155,302 @@ Utils.NavigableFocusScope {
         }
         function actionAtIndex(index) {
             var list = []
-            for (var i = 0; i < delegateModel.selectedGroup.count; i++)
-                list.push(delegateModel.selectedGroup.get(i).model.id)
+            for (var i = 0; i < videosDelegate.selectedGroup.count; i++)
+                list.push(videosDelegate.selectedGroup.get(i).model.id)
             medialib.addAndPlay( list )
-        }
-    }
-
-    /*
-     *define the intial position/selection
-     * This is done on activeFocus rather than Component.onCompleted because delegateModel.
-     * selectedGroup update itself after this event
-     */
-    onActiveFocusChanged: {
-        if (activeFocus && delegateModel.items.count > 0 && delegateModel.selectedGroup.count === 0) {
-            var initialIndex = 0
-            if (view.currentItem.currentIndex !== -1)
-                initialIndex = view.currentItem.currentIndex
-            delegateModel.items.get(initialIndex).inSelected = true
-            view.currentItem.currentIndex = initialIndex
         }
     }
 
     Component {
         id: gridComponent
-        Utils.KeyNavigableGridView {
-            id: gridView_id
+        Flickable{
+            id: flickable
+            anchors.fill: parent
+            contentHeight: allSections.implicitHeight
+            ScrollBar.vertical: ScrollBar{}
+            onActiveFocusChanged: {
+            if(activeFocus)
+                videosGV.forceActiveFocus()
+            }
 
-            model: delegateModel.parts.grid
-            modelCount: delegateModel.items.count
 
-            focus: true
+            property int currentIndexRecents: -1
+            property int currentIndexVideos: -1
 
-            cellWidth: (VLCStyle.video_normal_width) + VLCStyle.margin_large
-            cellHeight: (VLCStyle.video_normal_height) + VLCStyle.margin_xlarge + VLCStyle.margin_normal
-
-            onSelectAll: delegateModel.selectAll()
-            onSelectionUpdated: delegateModel.updateSelection( keyModifiers, oldIndex, newIndex )
-            onActionAtIndex: delegateModel.actionAtIndex(index)
-
-            onActionLeft: root.actionLeft(index)
-            onActionRight: root.actionRight(index)
-            onActionDown: root.actionDown(index)
-            onActionUp: root.actionUp(index)
-            onActionCancel: root.actionCancel(index)
-
-            header:Item {
-                id: videosHeader
-                height: childrenRect.height + VLCStyle.margin_normal
-                anchors{
+            Rectangle {
+                id: allSections
+                color: "transparent"
+                implicitHeight: childrenRect.height
+                implicitWidth: view.width
+                anchors {
                     left: parent.left
                     right: parent.right
                 }
 
-                Label {
-                    id: videosTxt
+            Rectangle {
+                id: recentsSection
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                implicitHeight: childrenRect.height
+                color: "transparent"
 
-                    anchors.top: videosHeader.top
-                    anchors.left: videosHeader.left
-                    anchors.topMargin: VLCStyle.margin_normal
-                    anchors.leftMargin: VLCStyle.margin_large
-
-                    font.pixelSize: VLCStyle.fontSize_xxlarge
-                    color: VLCStyle.colors.text
-                    text: qsTr("Videos")
-                    font.weight: Font.Bold
+                Utils.LabelSeparator {
+                    id: recentsSeparator
+                    text: qsTr("Recents")
                 }
 
                 Rectangle {
-                    id: videosSeparator
-                    height: VLCStyle.heightBar_xxxsmall
-                    radius: 2
+                    color: "transparent"
+                    anchors.top: recentsSeparator.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: recentsGV.contentHeight
 
-                    anchors{
-                        left: videosHeader.left
-                        right: videosHeader.right
-                        top: videosTxt.bottom
-                        topMargin: VLCStyle.margin_small
-                        leftMargin: VLCStyle.margin_large
+                    Utils.SelectableDelegateModel {
+                        id: recentsDelegate
+                       model: MLRecentsModel {
+                           ml: medialib
+                       }
+
+                        delegate: Package {
+                            id: recentsElement
+                            Utils.GridItem {
+                                Package.name: "grid"
+                                image: model.thumbnail || VLCStyle.noArtCover
+                                title: model.title || qsTr("Unknown title")
+                                selected: recentsGV.activeFocus && recentsElement.DelegateModel.inSelected
+                                infoLeft: model.duration
+                                resolution: model.resolution
+                                channel: model.channel
+                                isVideo: true
+                                isNew: model.playcount < 1
+                                progress: model.position > 0 ? model.position : 0
+                                pictureWidth: VLCStyle.video_large_width
+                                pictureHeight: VLCStyle.video_large_height
+                                onItemClicked : {
+                                    if (key == Qt.RightButton){
+                                        contextMenu.model = model
+                                        contextMenu.popup()
+                                    }
+                                    recentsDelegate.updateSelection( modifier , view.currentItem.currentIndexRecents, index)
+                                    view.currentItem.currentIndexRecents = index
+                                    root.currentGridView = recentsGV
+                                    root.currentGridView.forceActiveFocus()
+                                }
+                                onPlayClicked: medialib.addAndPlay( model.id )
+                                onAddToPlaylistClicked : medialib.addToPlaylist( model.id )
+                                onContextMenuButtonClicked:{
+                                    contextMenu.model = model;
+                                    contextMenu.popup(menuParent,0,0,playMenuItem)
+                                }
+                                onSelectedChanged:{
+                                    if(selected)
+                                        root.currentGridView = recentsGV
+                                }
+
+                            }
+
+                        }
+                        function actionAtIndex(index) {
+                            var list = []
+                            for (var i = 0; i < recentsDelegate.selectedGroup.count; i++)
+                                list.push(recentsDelegate.selectedGroup.get(i).model.id)
+                            medialib.addAndPlay( list )
+                        }
+                    }
+
+                    VideoExpandableGrid {
+                        id: recentsGV
+                        property Item currentItem: Item{}
+                        anchors.fill: parent
+                        anchors.leftMargin: leftBtn.width/2
+                        anchors.rightMargin: leftBtn.width/2
+                        activeFocusOnTab:true
+                        isSingleRow: true
+
+                        model: recentsDelegate
+                        modelTop: recentsDelegate.parts.gridTop
+                        modelCount: recentsDelegate.items.count
+
+                        expandDelegateImplicitHeight: view.height/3
+                        expandDelegateWidth: view.width
+
+                        gridDelegatePictureWidth: VLCStyle.video_large_width
+                        gridDelegatePictureHeight: VLCStyle.video_large_height
+
+                        cellWidth: (VLCStyle.video_large_width) + VLCStyle.margin_large
+                        cellHeight: (VLCStyle.video_large_height) + VLCStyle.margin_xlarge
+
+
+                        onGridItemClicked: {
+                            if (key == Qt.RightButton){
+                                contextMenu.model = delegateModelItem.model
+                                contextMenu.popup()
+                            }
+                            recentsDelegate.updateSelection( modifier , view.currentItem.currentIndexRecents, delegateModelItem.itemsIndex)
+                            view.currentItem.currentIndexRecents = delegateModelItem.itemsIndex
+                            root.currentGridView = recentsGV
+                            root.currentGridView.forceActiveFocus()
+                        }
+                        onGridItemContextButtonClicked: {
+                            contextMenu.model = delegateModelItem.model;
+                            contextMenu.popup(menuParent,contextMenu.width,0,playMenuItem)
+                        }
+                        onGridItemSelectedChanged: {
+                            if(selected){
+                                root.currentGridView = recentsGV
+                                recentsGV.currentItem = item
+
+                                if (recentsGV.currentItem.x + recentsGV.currentItem.width > recentsGV.contentX + recentsGV.width ||
+                                        recentsGV.currentItem.x < recentsGV.contentX)
+
+                                    recentsGV.contentX = ((recentsGV.width + recentsGV.currentItem.x) > recentsGV.contentWidth) ?
+                                                recentsGV.contentWidth-recentsGV.width : recentsGV.currentItem.x
+                            }
+                        }
+                        onActionLeft: root.actionLeft(index)
+                        onActionRight: root.actionRight(index)
+                        onActionDown: videosGV.forceActiveFocus()
+                        onActionUp: root.actionUp(index)
+                        onActionCancel: root.actionCancel(index)
+
+                        /*
+                         *define the intial position/selection
+                         * This is done on activeFocus rather than Component.onCompleted because recentsDelegate.
+                         * selectedGroup update itself after this event
+                         */
+                        onActiveFocusChanged: {
+                            if (activeFocus && recentsDelegate.items.count > 0 && recentsDelegate.selectedGroup.count === 0) {
+                                var initialIndex = 0
+                                if (view.currentItem.currentIndexRecents !== -1)
+                                    initialIndex = view.currentItem.currentIndexRecents
+                                recentsDelegate.items.get(initialIndex).inSelected = true
+                                view.currentItem.currentIndexRecents = initialIndex
+                            }
+                            if (activeFocus)
+                                flickable.ScrollBar.vertical.position = 0
+
+                        }
 
                     }
-                    color: VLCStyle.colors.bgAlt
+
+
+                    Utils.RoundButton{
+                        id: leftBtn
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        text:"<"
+                        onClicked: recentsGV.prevPage()
+                    }
+
+
+                    Utils.RoundButton{
+                        id: rightBtn
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
+                        text:">"
+                        onClicked: recentsGV.nextPage()
+                    }
+               }
+            }
+
+
+            Rectangle {
+                id: videosSection
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    top: recentsSection.bottom
+                }
+                implicitHeight: childrenRect.height
+                color: "transparent"
+
+                Utils.LabelSeparator {
+                    id: videosSeparator
+                    text: qsTr("Videos")
+                }
+                Rectangle {
+                    color: VLCStyle.colors.bg
+                    anchors.top: videosSeparator.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: videosGV.contentHeight
+                    VideoExpandableGrid {
+                        id: videosGV
+                        Component.onCompleted: root.videosGridView = videosGV
+                        property Item currentItem: Item{}
+
+                        activeFocusOnTab:true
+                        anchors.fill: parent
+
+                        model: videosDelegate
+                        modelTop: videosDelegate.parts.gridTop
+                        modelCount: videosDelegate.items.count
+
+                        expandDelegateImplicitHeight: view.height/3
+                        expandDelegateWidth: view.width
+
+
+                        onGridItemClicked: {
+
+                            if (key == Qt.RightButton){
+                                contextMenu.model = delegateModelItem.model
+                                contextMenu.popup()
+                            }
+                            videosDelegate.updateSelection( modifier , view.currentItem.currentIndexVideos, delegateModelItem.itemsIndex)
+                            view.currentItem.currentIndexVideos = delegateModelItem.itemsIndex
+                            root.currentGridView = videosGV
+                            root.currentGridView.forceActiveFocus()
+
+                        }
+                        onGridItemContextButtonClicked: {
+                            contextMenu.model = delegateModelItem.model;
+                            contextMenu.popup(menuParent,contextMenu.width,0,contextMenu.playMenuItem)
+                        }
+                        onGridItemSelectedChanged: {
+                            if(selected){
+                                root.currentGridView = videosGV
+                                videosGV.currentItem = item
+
+                                if (videosSection.y + videosGV.currentItem.y + videosGV.currentItem.height > flickable.contentY + flickable.height - videosSection.y ||
+                                       videosSection.y + videosGV.currentItem.y < flickable.contentY)
+
+                                    flickable.contentY = ((view.height + videosGV.currentItem.y) > flickable.contentHeight) ?
+                                                flickable.contentHeight-view.height : videosSection.y + videosGV.currentItem.y
+                            }
+                    }
+
+                        onActionLeft: root.actionLeft(index)
+                        onActionRight: root.actionRight(index)
+                        onActionDown: root.actionDown(index)
+                        onActionUp: recentsGV.forceActiveFocus()
+                        onActionCancel: root.actionCancel(index)
+
+                        /*
+                         *define the intial position/selection
+                         * This is done on activeFocus rather than Component.onCompleted because videosDelegate.
+                         * selectedGroup update itself after this event
+                         */
+                        onActiveFocusChanged: {
+                            if (activeFocus && videosDelegate.items.count > 0 && videosDelegate.selectedGroup.count === 0) {
+                                var initialIndex = 0
+                                if (view.currentItem.currentIndexVideos !== -1)
+                                    initialIndex = view.currentItem.currentIndexVideos
+                                videosDelegate.items.get(initialIndex).inSelected = true
+                                view.currentItem.currentIndexVideos = initialIndex
+                            }
+                        }
+
+                    }
+
                 }
             }
         }
+        }
     }
+
 
     Component {
         id: listComponent
@@ -256,15 +458,15 @@ Utils.NavigableFocusScope {
         Utils.KeyNavigableListView {
             id: listView_id
 
-            model: delegateModel.parts.list
-            modelCount: delegateModel.items.count
+            model: videosDelegate.parts.list
+            modelCount: videosDelegate.items.count
 
             focus: true
             spacing: VLCStyle.margin_xxxsmall
 
-            onSelectAll: delegateModel.selectAll()
-            onSelectionUpdated: delegateModel.updateSelection( keyModifiers, oldIndex, newIndex )
-            onActionAtIndex: delegateModel.actionAtIndex(index)
+            onSelectAll: videosDelegate.selectAll()
+            onSelectionUpdated: videosDelegate.updateSelection( keyModifiers, oldIndex, newIndex )
+            onActionAtIndex: videosDelegate.actionAtIndex(index)
 
             onActionLeft: root.actionLeft(index)
             onActionRight: root.actionRight(index)
@@ -274,11 +476,11 @@ Utils.NavigableFocusScope {
         }
     }
 
+
         Utils.StackViewExt {
             id: view
-
-            anchors.fill: root
-
+            anchors.fill:parent
+            clip: true
             focus: true
             initialItem: medialib.gridView ? gridComponent : listComponent
             Connections {
@@ -294,7 +496,7 @@ Utils.NavigableFocusScope {
     }
     Label {
         anchors.centerIn: parent
-        visible: delegateModel.items.count === 0
+        visible: videosDelegate.items.count === 0
         font.pixelSize: VLCStyle.fontHeight_xxlarge
         color: root.activeFocus ? VLCStyle.colors.accent : VLCStyle.colors.text
         text: qsTr("No tracks found")
