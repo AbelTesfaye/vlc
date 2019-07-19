@@ -45,8 +45,11 @@ Rectangle {
 
     signal playClicked
     signal addToPlaylistClicked
-    signal itemClicked(int keys, int modifier)
+    signal itemClicked(int key, int modifier)
     signal itemDoubleClicked(int keys, int modifier)
+    signal contextMenuButtonClicked(Item menuParent)
+    
+    onActiveFocusChanged: activeFocus && contextButton.forceActiveFocus()
 
     Rectangle {
         id: gridItem
@@ -58,12 +61,11 @@ Rectangle {
         MouseArea {
             id: mouseArea
             hoverEnabled: true
-            onClicked:  {
-                root.itemClicked(mouse.buttons, mouse.modifiers)
-            }
+            onClicked: root.itemClicked(mouse.button, mouse.modifiers)
             onDoubleClicked: root.itemDoubleClicked(mouse.buttons, mouse.modifiers);
             width: childrenRect.width
             height: childrenRect.height
+            acceptedButtons: Qt.RightButton | Qt.LeftButton
 
                 Item {
                     id: picture
@@ -157,7 +159,6 @@ Rectangle {
                                     }
                                 }
                             }
-
                         ProgressBar {
                             id: progressBar
                             value: root.progress
@@ -183,6 +184,7 @@ Rectangle {
                         }
                         Button {
                             id: contextButton
+                            visible: isVideo
                             anchors {
                                 top:cover.top
                                 right:cover.right
@@ -193,7 +195,7 @@ Rectangle {
                             font.pointSize: VLCStyle.fontMetrics_normal
 
                             hoverEnabled: true
-                            onClicked: root.contextMenuButtonClicked(contextButton)
+                            onClicked: root.contextMenuButtonClicked(cover_bg)
                             background: Rectangle {
                                 id: contextButtonRect
                                 anchors.fill: contextButton
