@@ -56,6 +56,7 @@ private:
     virtual void onVlcMlEvent( const vlc_ml_event_t* event ) override;
     void setNumberOfItemsToShow(int);
     int getNumberOfItemsToShow();
+    int m_video_count;
 };
 
 #endif // MCRECENTSMODEL_H

@@ -103,9 +103,13 @@ std::vector<std::unique_ptr<MLVideo> > MLRecentsVideoModel::fetch()
     if ( media_list == nullptr )
         return {};
     std::vector<std::unique_ptr<MLVideo>> res;
+    m_video_count = 0;
     for( vlc_ml_media_t &media: ml_range_iterate<vlc_ml_media_t>( media_list ) )
         if(media.i_type == VLC_ML_MEDIA_TYPE_VIDEO)
+        {
+            m_video_count++;
             res.emplace_back( std::unique_ptr<MLVideo>{ new MLVideo(m_ml, &media) } );
+        }
     return res;
 }
 
@@ -113,10 +117,9 @@ size_t MLRecentsVideoModel::countTotalElements() const
 {
 
     if(numberOfItemsToShow == -1){
-        vlc_ml_query_params_t params{};
-        return vlc_ml_count_video_media(m_ml, &params);
+        return m_video_count;
     }
-    return numberOfItemsToShow;
+    return std::min(m_video_count,numberOfItemsToShow);
 }
 
 void MLRecentsVideoModel::onVlcMlEvent(const vlc_ml_event_t* event)
