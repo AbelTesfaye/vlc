@@ -600,6 +600,7 @@ libqt_plugin_la_QML = \
 	gui/qt/qml/mediacenter/MCMainDisplay.qml \
 	gui/qt/qml/mediacenter/MCMusicDisplay.qml \
 	gui/qt/qml/mediacenter/MCVideoDisplay.qml \
+	gui/qt/qml/mediacenter/MCVideoListDisplay.qml \
 	gui/qt/qml/mediacenter/MCVideoQualityLabel.qml \
 	gui/qt/qml/mediacenter/MCVideoProgressBar.qml \
 	gui/qt/qml/mediacenter/MCNetworkDisplay.qml \
