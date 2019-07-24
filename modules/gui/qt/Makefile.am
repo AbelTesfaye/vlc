@@ -561,6 +561,7 @@ libqt_plugin_la_QML = \
 	gui/qt/qml/utils/ToolTipArea.qml \
 	gui/qt/qml/utils/Drawer.qml \
 	gui/qt/qml/utils/GridItem.qml \
+	gui/qt/qml/utils/ContextButton.qml \
 	gui/qt/qml/utils/IconToolButton.qml \
 	gui/qt/qml/utils/ImageToolButton.qml \
 	gui/qt/qml/utils/TextToolButton.qml \
@@ -580,6 +581,7 @@ libqt_plugin_la_QML = \
 	gui/qt/qml/utils/ScanProgressBar.qml \
 	gui/qt/qml/utils/LabelSeparator.qml \
 	gui/qt/qml/utils/RoundButton.qml \
+	gui/qt/qml/utils/RoundImage.qml \
         gui/qt/qml/utils/SearchBox.qml \
         gui/qt/qml/utils/SortControl.qml \
 	gui/qt/qml/menus/CheckableModelSubMenu.qml \
@@ -598,6 +600,8 @@ libqt_plugin_la_QML = \
 	gui/qt/qml/mediacenter/MCMainDisplay.qml \
 	gui/qt/qml/mediacenter/MCMusicDisplay.qml \
 	gui/qt/qml/mediacenter/MCVideoDisplay.qml \
+	gui/qt/qml/mediacenter/MCVideoQualityLabel.qml \
+	gui/qt/qml/mediacenter/MCVideoProgressBar.qml \
 	gui/qt/qml/mediacenter/MCNetworkDisplay.qml \
 	gui/qt/qml/mediacenter/MusicAlbumsDisplay.qml \
 	gui/qt/qml/mediacenter/MusicAlbumsGridExpandDelegate.qml \
