@@ -19,10 +19,10 @@ import QtQuick 2.11
 import QtQuick.Controls 2.4
 import QtQml.Models 2.2
 import QtQuick.Layouts 1.3
-
-import org.videolan.medialib 0.1
+import QtGraphicalEffects 1.0
 
 import "qrc:///utils/" as Utils
+import "qrc:///mediacenter/" as MC
 import "qrc:///style/"
 
 NavigableFocusScope {
@@ -30,6 +30,8 @@ NavigableFocusScope {
 
     //forwarded from subview
     signal actionForSelection( var selection )
+    signal contextMenuButtonClicked(Item menuParent, var menuModel)
+    signal rightClick(Item menuParent, var menuModel)
 
     property var sortModel: ListModel { }
     property var model: []
@@ -47,6 +49,8 @@ NavigableFocusScope {
     property color headerColor
 
     property alias delegateModel: delegateModel
+    property real rowHeight: VLCStyle.fontHeight_normal + VLCStyle.margin_large
+    property alias spacing: view.spacing
 
     Utils.SelectableDelegateModel {
         id: delegateModel
@@ -61,24 +65,44 @@ NavigableFocusScope {
                 Package.name: "list"
                 id: lineView
 
-                width: parent.width
-                height: VLCStyle.fontHeight_normal + VLCStyle.margin_large
-
-                color:  VLCStyle.colors.getBgColor(element.DelegateModel.inSelected, hoverArea.containsMouse, this.activeFocus)
+                width: root.width
+                height: root.rowHeight
+                color: VLCStyle.colors.bg
 
                 MouseArea {
                     id: hoverArea
                     anchors.fill: parent
                     hoverEnabled: true
+                    Keys.onMenuPressed: root.contextMenuButtonClicked(contextButton,rowModel)
+                    acceptedButtons: Qt.RightButton | Qt.LeftButton
+
                     onClicked: {
                         delegateModel.updateSelection( mouse.modifiers , view.currentIndex, index)
                         view.currentIndex = rowModel.index
                         lineView.forceActiveFocus()
+
+                        if (mouse.button === Qt.RightButton){
+                            root.rightClick(lineView,rowModel)
+                        }
                     }
 
                     onDoubleClicked: {
                         actionForSelection(delegateModel.selectedGroup)
                     }
+                    RectangularGlow {
+                        visible: element.DelegateModel.inSelected || hoverArea.containsMouse
+                        anchors.fill: parent
+                        glowRadius: VLCStyle.margin_xxsmall
+                        color: VLCStyle.colors.getBgColor(element.DelegateModel.inSelected, hoverArea.containsMouse, lineView.activeFocus)
+                    }
+
+                    Rectangle{
+                        anchors.fill: parent
+                        anchors.topMargin: VLCStyle.margin_xxsmall
+                        anchors.bottomMargin: VLCStyle.margin_xxsmall
+                        anchors.leftMargin: VLCStyle.margin_xxxsmall
+                        anchors.rightMargin: VLCStyle.margin_xxxsmall
+                        color: VLCStyle.colors.bg
 
                     Row {
                         anchors {
@@ -86,7 +110,6 @@ NavigableFocusScope {
                             leftMargin: VLCStyle.margin_normal
                             rightMargin: VLCStyle.margin_normal
                         }
-
                         Repeater {
                             model: sortModel
 
@@ -95,22 +118,76 @@ NavigableFocusScope {
                                 width: model.width * view.width
                                 Layout.alignment: Qt.AlignVCenter
 
-                                Text {
-                                    text: rowModel[model.criteria]
-                                    elide: Text.ElideRight
-                                    font.pixelSize: VLCStyle.fontSize_normal
-                                    color: VLCStyle.colors.text
+                                Loader{
+                                    anchors.centerIn: parent
+                                    active: model.type === "image"
+                                    sourceComponent: RoundImage{
+                                        id: cover
+                                        height: VLCStyle.video_small_height
+                                        width: VLCStyle.video_small_width
+                                        source: rowModel[model.criteria]
 
-                                    anchors {
-                                        fill: parent
-                                        leftMargin: VLCStyle.margin_xsmall
-                                        rightMargin: VLCStyle.margin_xsmall
+                                        MC.MCVideoQualityLabel {
+                                            id: resolutionLabel
+                                            anchors {
+                                                top: cover.top
+                                                left: cover.left
+                                                topMargin: VLCStyle.margin_xxsmall
+                                                leftMargin: VLCStyle.margin_xxsmall
+                                            }
+                                            text: rowModel.resolution
+                                        }
+                                        MC.MCVideoQualityLabel {
+                                            anchors {
+                                                top: cover.top
+                                                left: resolutionLabel.right
+                                                topMargin: VLCStyle.margin_xxsmall
+                                                leftMargin: VLCStyle.margin_xxxsmall
+                                            }
+                                            visible: channel.length > 0
+                                            text: rowModel.channel
+                                            color: "limegreen"
+                                        }
+                                        MC.MCVideoProgressBar {
+                                            value: rowModel.position
+                                            anchors {
+                                                bottom: parent.bottom
+                                                left: parent.left
+                                                right: parent.right
+                                            }
+                                        }
+
                                     }
-                                    verticalAlignment: Text.AlignVCenter
-                                    horizontalAlignment: Text.AlignLeft
+                                }
+                                Loader{
+                                    anchors.fill:parent
+
+                                    active: model.type === "contextButton"
+                                    sourceComponent: ContextButton{
+                                        onClicked: root.contextMenuButtonClicked(this,rowModel)
+                                    }
+                                }
+                                Loader{
+                                    anchors.fill:parent
+                                    active: model.type !== "image"
+                                    sourceComponent: Text {
+                                        text: rowModel[model.criteria] || ""
+                                        elide: Text.ElideRight
+                                        font.pixelSize: VLCStyle.fontSize_normal
+                                        color: (model.isPrimary)? VLCStyle.colors.text : VLCStyle.colors.textInactive
+
+                                        anchors {
+                                            fill: parent
+                                            leftMargin: VLCStyle.margin_xsmall
+                                            rightMargin: VLCStyle.margin_xsmall
+                                        }
+                                        verticalAlignment: Text.AlignVCenter
+                                        horizontalAlignment: Text.AlignLeft
+                                    }
                                 }
                             }
                         }
+                    }   
                     }
                 }
             }
@@ -154,7 +231,7 @@ NavigableFocusScope {
                             //Layout.alignment: Qt.AlignVCenter
 
                             Text {
-                                text: model.text
+                                text: model.text || ""
                                 elide: Text.ElideRight
                                 font {
                                     pixelSize: VLCStyle.fontSize_normal
