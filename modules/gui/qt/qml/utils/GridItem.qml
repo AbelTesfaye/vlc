@@ -23,6 +23,7 @@ import QtGraphicalEffects 1.0
 import org.videolan.medialib 0.1
 
 import "qrc:///utils/" as Utils
+import "qrc:///mediacenter/" as MC
 import "qrc:///style/"
 
 Rectangle {
@@ -98,22 +99,12 @@ Rectangle {
                                    root.activeFocus)
                     }
 
-                    Image {
+                    RoundImage {
                         id: cover
                         anchors.fill: parent
                         anchors.margins: VLCStyle.margin_normal
                         source: image
-                        fillMode: Image.PreserveAspectCrop
-                        sourceSize: Qt.size(width, height)
-                        layer.enabled: true
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                radius: 3
-                                width: cover.width
-                                height: cover.height
-                                visible: false
-                            }
-                        }
+
                         Behavior on anchors.margins {
                             SmoothedAnimation {
                                 velocity: 100
@@ -217,8 +208,7 @@ Rectangle {
                                 }
                             }
                         }
-                        ProgressBar {
-                            id: progressBar
+                        MC.MCVideoProgressBar {
                             value: root.progress
                             visible: isVideo
                             anchors {
@@ -226,53 +216,20 @@ Rectangle {
                                 left: parent.left
                                 right: parent.right
                             }
-                            background: Rectangle {
-                                implicitHeight: 2 * VLCStyle.scale
-                                color: VLCStyle.colors.text
-                            }
-                            contentItem: Item {
-                                Rectangle {
-                                    width: progressBar.visualPosition * parent.width
-                                    height: parent.height
-                                    color: VLCStyle.colors.accent
-                                }
-                            }
                         }
                     }
-                    Button {
+                    ContextButton {
                         id: contextButton
                         visible: isVideo
                         anchors {
                             top: cover.top
                             right: cover.right
                         }
-                        width: VLCStyle.icon_normal
-                        height: VLCStyle.icon_normal
-                        text: "\u22ef" //ellipsis icon
-                        font.pointSize: VLCStyle.fontMetrics_normal
-
-                        hoverEnabled: true
+                        color: "white"
                         onClicked: root.contextMenuButtonClicked(cover_bg)
-                        background: Rectangle {
-                            id: contextButtonRect
-                            anchors.fill: contextButton
-                            color: "transparent"
-                        }
-                        contentItem: Text {
-                            id: btnTxt
-                            text: contextButton.text
-                            font: contextButton.font
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            //                                layer.enabled: true
-                            //                                layer.effect: DropShadow {
-                            //                                    color: VLCStyle.colors.text
-                            //                                }
-                        }
                     }
 
-                    Label {
+                    MC.MCVideoQualityLabel {
                         id: resolutionLabel
                         visible: root.isVideo
                         anchors {
@@ -282,22 +239,8 @@ Rectangle {
                             leftMargin: VLCStyle.margin_xxsmall
                         }
                         text: root.resolution
-                        color: "white"
-                        bottomPadding: VLCStyle.margin_xxxsmall
-                        topPadding: VLCStyle.margin_xxxsmall
-                        leftPadding: VLCStyle.margin_xxxsmall
-                        rightPadding: VLCStyle.margin_xxxsmall
-                        font.pixelSize: VLCStyle.fontSize_normal
-                        background: Rectangle {
-                            id: resolutionLabelRect
-                            anchors.fill: resolutionLabel
-                            color: "black"
-                            opacity: 0.5
-                            radius: 3
-                        }
                     }
-                    Label {
-                        id: audioChannelLabel
+                    MC.MCVideoQualityLabel {
                         anchors {
                             top: cover.top
                             left: resolutionLabel.right
@@ -307,18 +250,6 @@ Rectangle {
                         visible: channel.length > 0
                         text: root.channel
                         color: "limegreen"
-                        bottomPadding: VLCStyle.margin_xxxsmall
-                        topPadding: VLCStyle.margin_xxxsmall
-                        leftPadding: VLCStyle.margin_xxxsmall
-                        rightPadding: VLCStyle.margin_xxxsmall
-                        font.pixelSize: VLCStyle.fontSize_normal
-                        background: Rectangle {
-                            id: audioChannelLabelRect
-                            anchors.fill: audioChannelLabel
-                            color: "black"
-                            opacity: 0.5
-                            radius: 3
-                        }
                     }
                     states: [
                         State {
