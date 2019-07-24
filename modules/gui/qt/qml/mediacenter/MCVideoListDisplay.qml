@@ -41,7 +41,7 @@ Utils.KeyNavigableTableView {
     section.property: "title"
     section.criteria: ViewSection.FirstCharacter
 
-    rowHeight: VLCStyle.video_small_height
+    rowHeight: VLCStyle.video_small_height + VLCStyle.margin_normal
 
     headerColor: VLCStyle.colors.bg
     spacing: VLCStyle.margin_small
